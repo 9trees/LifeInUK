@@ -19,3 +19,4 @@ study_site_inspection.json
 # Files
 web_back/
 
+.DS_Store
