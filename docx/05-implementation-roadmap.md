@@ -12,10 +12,13 @@
   - Existing mock test module integrated into app navigation shell
 - Milestone B started in current codebase.
 - Completed now (Milestone B slice):
-  - MHTML study-page importer script and generated JSON dataset (27 pages)
+  - Authenticated live-site scraper (scrape_study_content.py) capturing ordered
+    content blocks (headings, paragraphs, bullets, images, tables) for 27 pages
+  - Local image assets downloaded to assets/study/ (47 images) for offline use
   - Study plan extraction and checklist dataset generation
   - Study view with topic filtering, page list, and per-page status
-  - Study reader with previous/next navigation and resume-last-page
+  - Study reader rebuilt to match the official site reading style (serif
+    headings, figures with captions, tables) with previous/next + resume
   - Study progress tracking per user: visits, completion, time spent, last viewed
 - Next in sequence:
   - Milestone C practice engine implementation

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Build Study JSON datasets from source MHTML files.
 
+DEPRECATED for study_content.json: study pages are now scraped live from the
+official site (with images and full block structure) via scrape_study_content.py.
+This script is retained only to regenerate study_plan.json from the saved
+study-plan MHTML file.
+
 Outputs:
-- study_content.json: normalized study pages grouped by topic/sequence
+- study_content.json: (legacy) normalized study pages grouped by topic/sequence
 - study_plan.json: study-plan checklist items
 """
 

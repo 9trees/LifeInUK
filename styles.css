@@ -273,10 +273,78 @@ h1 {
 }
 
 .study-page-content {
-  line-height: 1.65;
-  max-height: 360px;
+  line-height: 1.7;
+  max-height: 460px;
   overflow: auto;
-  padding-right: 6px;
+  padding-right: 10px;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.study-page-content p {
+  margin: 0 0 14px;
+}
+
+.study-heading {
+  font-family: "Source Serif 4", serif;
+  color: var(--brand-dark);
+  margin: 18px 0 8px;
+  line-height: 1.3;
+}
+
+.study-page-content ul,
+.study-page-content ol {
+  margin: 0 0 14px;
+  padding-left: 22px;
+  display: block;
+}
+
+.study-page-content li {
+  margin-bottom: 6px;
+}
+
+.study-figure {
+  margin: 16px 0;
+  text-align: center;
+}
+
+.study-figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+}
+
+.study-figure figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.study-table-wrap {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.study-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.study-table th,
+.study-table td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.study-table th {
+  background: #f1f5f9;
+  font-weight: 700;
 }
 
 .study-reader-actions {

@@ -559,27 +559,12 @@ function openStudyPage(pageId, fromUserAction) {
 
   studyReader.classList.remove("hidden");
   studyPageTitle.textContent = page.title;
-  studyPageMeta.textContent = `Topic ${page.topic_code}.${page.sequence_no} | Source: ${page.source_file}`;
+  const topicName = appState.study.topicNames[String(page.topic_code)] || `Topic ${page.topic_code}`;
+  studyPageMeta.textContent = `${topicName} — Section ${page.topic_code}.${page.sequence_no}`;
 
   studyPageContent.innerHTML = "";
-  (page.content_blocks || []).forEach((block) => {
-    if (block.type === "bullet") {
-      const li = document.createElement("li");
-      li.textContent = block.text;
-
-      let list = studyPageContent.querySelector("ul");
-      if (!list) {
-        list = document.createElement("ul");
-        studyPageContent.appendChild(list);
-      }
-      list.appendChild(li);
-      return;
-    }
-
-    const paragraph = document.createElement("p");
-    paragraph.textContent = block.text;
-    studyPageContent.appendChild(paragraph);
-  });
+  const blocks = page.blocks || page.content_blocks || [];
+  blocks.forEach((block) => renderStudyBlock(block));
 
   updateStudyReaderButtons();
   if (fromUserAction) {
@@ -587,6 +572,88 @@ function openStudyPage(pageId, fromUserAction) {
   }
 
   renderStudyPageList();
+}
+
+function renderStudyBlock(block) {
+  switch (block.type) {
+    case "heading": {
+      const level = Math.min(6, Math.max(3, (block.level || 2) + 1));
+      const heading = document.createElement(`h${level}`);
+      heading.className = "study-heading";
+      heading.textContent = block.text;
+      studyPageContent.appendChild(heading);
+      break;
+    }
+    case "paragraph": {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = block.text;
+      studyPageContent.appendChild(paragraph);
+      break;
+    }
+    case "bullets": {
+      const list = document.createElement(block.ordered ? "ol" : "ul");
+      (block.items || []).forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        list.appendChild(li);
+      });
+      studyPageContent.appendChild(list);
+      break;
+    }
+    case "bullet": {
+      // Backwards compatibility with older dataset schema.
+      let list = studyPageContent.querySelector("ul:last-of-type");
+      if (!list) {
+        list = document.createElement("ul");
+        studyPageContent.appendChild(list);
+      }
+      const li = document.createElement("li");
+      li.textContent = block.text;
+      list.appendChild(li);
+      break;
+    }
+    case "image": {
+      const figure = document.createElement("figure");
+      figure.className = "study-figure";
+
+      const img = document.createElement("img");
+      img.src = block.src;
+      img.alt = block.alt || "";
+      img.loading = "lazy";
+      figure.appendChild(img);
+
+      if (block.alt) {
+        const caption = document.createElement("figcaption");
+        caption.textContent = block.alt;
+        figure.appendChild(caption);
+      }
+
+      studyPageContent.appendChild(figure);
+      break;
+    }
+    case "table": {
+      const wrapper = document.createElement("div");
+      wrapper.className = "study-table-wrap";
+
+      const table = document.createElement("table");
+      table.className = "study-table";
+      (block.rows || []).forEach((row, rowIndex) => {
+        const tr = document.createElement("tr");
+        row.forEach((cell) => {
+          const cellEl = document.createElement(rowIndex === 0 ? "th" : "td");
+          cellEl.textContent = cell;
+          tr.appendChild(cellEl);
+        });
+        table.appendChild(tr);
+      });
+
+      wrapper.appendChild(table);
+      studyPageContent.appendChild(wrapper);
+      break;
+    }
+    default:
+      break;
+  }
 }
 
 function updateStudyReaderButtons() {
