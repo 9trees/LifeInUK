@@ -208,11 +208,14 @@ def mock_result(request, session_id):
         if item["is_correct"]:
             bucket["correct"] += 1
 
+    incorrect_answers = max(session.total_questions - session.correct_answers, 0)
+
     return render(request, "mocktest/result.html", {
         "session": session,
         "review": review,
         "topic_stats": topic_stats,
         "pass_mark": PASS_MARK,
+        "incorrect_answers": incorrect_answers,
     })
 
 

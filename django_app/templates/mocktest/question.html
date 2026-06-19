@@ -38,7 +38,7 @@
         <p class="fs-5 mb-4">{{ question.text }}</p>
 
         {% for opt in options %}
-        <label class="d-flex align-items-start gap-2 border rounded p-3 mb-2 option-label" style="cursor:pointer;" id="opt-{{ opt.id }}">
+        <label class="d-flex align-items-start gap-2 border rounded p-3 mb-2 option-label {% if response.selected_option_id == opt.id %}selected-option{% endif %}" style="cursor:pointer;" id="opt-{{ opt.id }}">
           <input class="form-check-input mt-1 flex-shrink-0" type="radio" name="option" value="{{ opt.id }}"
             {% if response.selected_option_id == opt.id %}checked{% endif %}
             onchange="saveAnswer({{ opt.id }})">
@@ -116,6 +116,10 @@
   });
 
   function saveAnswer(optionId) {
+    document.querySelectorAll('.option-label').forEach((el) => el.classList.remove('selected-option'));
+    const selectedLabel = document.getElementById(`opt-${optionId}`);
+    if (selectedLabel) selectedLabel.classList.add('selected-option');
+
     const fd = new FormData();
     fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
     fd.append('option', optionId);

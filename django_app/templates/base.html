@@ -31,7 +31,7 @@
     </div>
   </nav>
 
-  <div class="container py-4" style="padding-bottom: 80px !important;">{% comment %}Bottom padding for sticky study action bar{% endcomment %}
+  <div class="container py-4 app-main">{% comment %}Main content offset for fixed navbar and sticky study action bar{% endcomment %}
     {% if user.is_authenticated and remaining_days is not None %}
     <div class="alert {% if remaining_days <= 5 %}alert-warning{% else %}alert-info{% endif %} d-flex justify-content-between align-items-center">
       <span><strong>{{ remaining_days }}</strong> day{{ remaining_days|pluralize }} remaining in your active access window.</span>

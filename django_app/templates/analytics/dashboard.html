@@ -1,54 +1,129 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-<h2 class="mb-3">Dashboard</h2>
+<div class="analytics-hero card shadow-sm border-0 mb-4">
+  <div class="card-body p-4 p-md-5">
+    <div class="row g-3 align-items-center">
+      <div class="col-lg-7">
+        <p class="text-uppercase small fw-semibold text-muted mb-1">Analytics overview</p>
+        <h2 class="fw-bold mb-2">Your study and mock progress at a glance</h2>
+        <p class="mb-0 text-muted">This dashboard combines study completion, practice accuracy, mock performance, and topic gaps into one view.</p>
+      </div>
+      <div class="col-lg-5">
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="analytics-hero-stat">
+              <span class="small text-muted d-block">Days left</span>
+              <span class="fs-3 fw-bold">{{ days_left }}</span>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="analytics-hero-stat">
+              <span class="small text-muted d-block">Best mock</span>
+              <span class="fs-3 fw-bold">{% if best_score is not None %}{{ best_score }}/24{% else %}-{% endif %}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="row g-3 mb-3">
   <div class="col-md-3">
-    <div class="card shadow-sm h-100"><div class="card-body">
-      <p class="text-muted mb-1">Active Days Left</p>
-      <p class="fs-3 fw-bold mb-0">{{ remaining_days }}</p>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card shadow-sm h-100"><div class="card-body">
+    <div class="card shadow-sm h-100 metric-card"><div class="card-body">
       <p class="text-muted mb-1">Study Completion</p>
       <p class="fs-3 fw-bold mb-0">{{ study_percent }}%</p>
       <small class="text-muted">{{ completed_pages }}/{{ total_pages }} pages</small>
     </div></div>
   </div>
   <div class="col-md-3">
-    <div class="card shadow-sm h-100"><div class="card-body">
-      <p class="text-muted mb-1">Best Mock</p>
-      <p class="fs-3 fw-bold mb-0">{% if best_score is not None %}{{ best_score }}/24{% else %}-{% endif %}</p>
-      <small class="text-muted">{{ mock_count }} attempt{{ mock_count|pluralize }}</small>
-    </div></div>
-  </div>
-  <div class="col-md-3">
-    <div class="card shadow-sm h-100"><div class="card-body">
+    <div class="card shadow-sm h-100 metric-card"><div class="card-body">
       <p class="text-muted mb-1">Practice Accuracy</p>
       <p class="fs-3 fw-bold mb-0">{{ practice_accuracy }}%</p>
       <small class="text-muted">{{ practice_total }} answered</small>
     </div></div>
   </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100 metric-card"><div class="card-body">
+      <p class="text-muted mb-1">Average Mock</p>
+      <p class="fs-3 fw-bold mb-0">{% if mock_average is not None %}{{ mock_average }}/24{% else %}-{% endif %}</p>
+      <small class="text-muted">{{ mock_count }} attempt{{ mock_count|pluralize }}</small>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100 metric-card"><div class="card-body">
+      <p class="text-muted mb-1">Latest Change</p>
+      <p class="fs-3 fw-bold mb-0">{% if mock_delta is not None %}{% if mock_delta >= 0 %}+{% endif %}{{ mock_delta }}{% else %}-{% endif %}</p>
+      <small class="text-muted">vs previous mock</small>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-7">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0 fw-bold">What to do next</h5>
+          <span class="badge bg-primary">Action plan</span>
+        </div>
+        <div class="d-grid gap-2">
+          {% for item in recommendations %}
+          <div class="p-3 rounded border bg-light-subtle recommendation-item">{{ item }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="fw-bold mb-3">Progress summary</h5>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small text-muted mb-1"><span>Study</span><span>{{ study_percent }}%</span></div>
+          <div class="progress" style="height:10px;"><div class="progress-bar" style="width:{{ study_percent }}%"></div></div>
+        </div>
+        <div class="mb-3">
+          <div class="d-flex justify-content-between small text-muted mb-1"><span>Practice</span><span>{{ practice_accuracy }}%</span></div>
+          <div class="progress" style="height:10px;"><div class="progress-bar bg-success" style="width:{{ practice_accuracy }}%"></div></div>
+        </div>
+        <div>
+          <div class="d-flex justify-content-between small text-muted mb-1"><span>Mock best</span><span>{% if best_score is not None %}{{ best_score }}/24{% else %}0/24{% endif %}</span></div>
+          <div class="progress" style="height:10px;"><div class="progress-bar bg-warning" style="width:{% if best_score is not None %}{% widthratio best_score 24 100 %}{% else %}0{% endif %}%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="row g-3">
   <div class="col-md-6">
-    <div class="card shadow-sm"><div class="card-body">
-      <h5>Topic-wise Accuracy</h5>
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <h5 class="fw-bold">Topic-wise Accuracy</h5>
       <canvas id="topicChart"></canvas>
     </div></div>
   </div>
   <div class="col-md-6">
-    <div class="card shadow-sm"><div class="card-body">
-      <h5>Mock Score Trend</h5>
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <h5 class="fw-bold">Mock Score Trend</h5>
       <canvas id="trendChart"></canvas>
     </div></div>
   </div>
 </div>
 
-{% if weakest %}
+{% if weak_topics %}
+<div class="card border-warning shadow-sm mt-3">
+  <div class="card-body">
+    <h5 class="fw-bold mb-2">Weakest topics</h5>
+    <div class="d-flex flex-wrap gap-2">
+      {% for topic in weak_topics %}
+      <span class="badge text-bg-warning p-2">{{ topic.name }} {{ topic.percent }}%</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% elif weakest %}
 <div class="alert alert-warning mt-3">
   <strong>Weakest topic:</strong> {{ weakest.name }} ({{ weakest.percent }}%). Consider more practice here.
 </div>

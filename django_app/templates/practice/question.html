@@ -20,11 +20,13 @@
 
       {% for opt in options %}
       <label class="d-flex align-items-start gap-2 border rounded p-3 mb-2 option-label
+        {% if response and response.selected_option_id == opt.id %} selected-option{% endif %}
         {% if response %}{% if opt.is_correct %} correct{% elif response.selected_option_id == opt.id %} wrong{% endif %}{% endif %}"
         style="cursor:{% if response %}default{% else %}pointer{% endif %}">
         <input class="form-check-input mt-1 flex-shrink-0" type="radio" name="option" value="{{ opt.id }}"
           {% if response %}disabled{% endif %}
-          {% if response.selected_option_id == opt.id %}checked{% endif %}>
+          {% if response.selected_option_id == opt.id %}checked{% endif %}
+          {% if not response %}onchange="submitAnswer()"{% endif %}>
         <span>{{ opt.text }}</span>
       </label>
       {% endfor %}
@@ -33,7 +35,6 @@
       {# Explanation toggle — helps user think before committing #}
       <div class="d-flex gap-2 mt-3 flex-wrap">
         <button type="button" class="btn btn-outline-secondary" id="show-expl-btn" onclick="toggleExplanation()">Show Explanation</button>
-        <button type="submit" class="btn btn-primary">Submit Answer</button>
       </div>
       {% endif %}
     </form>
@@ -69,6 +70,12 @@
   const start = Date.now();
   const form = document.getElementById('answer-form');
   if (form) form.addEventListener('submit', () => { document.getElementById('elapsed_ms').value = Date.now() - start; });
+
+  function submitAnswer() {
+    if (!form) return;
+    document.getElementById('elapsed_ms').value = Date.now() - start;
+    form.submit();
+  }
 
   function toggleExplanation() {
     const block = document.getElementById('explanation-block');
