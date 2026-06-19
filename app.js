@@ -2,6 +2,13 @@ const QUESTION_BANK_PATH = "./lituk_questions_422.json";
 const TEST_DURATION_SECONDS = 45 * 60;
 const PASS_MARK = 18;
 const TOTAL_QUESTIONS = 24;
+const ACTIVE_WINDOW_DAYS = 30;
+
+const STORAGE_KEYS = {
+  users: "lituk.users.v1",
+  session: "lituk.session.v1",
+  mockResults: "lituk.mock.results.v1",
+};
 
 const TOPIC_REQUIREMENTS = {
   "The values and principles of the UK": 1,
@@ -11,14 +18,37 @@ const TOPIC_REQUIREMENTS = {
   "The UK government, the law and your role": 7,
 };
 
-const state = {
+const appState = {
+  currentUserId: null,
+  users: [],
   bank: [],
-  testQuestions: [],
-  selectedAnswers: {},
-  timeLeft: TEST_DURATION_SECONDS,
-  timerId: null,
-  submitted: false,
+  mock: {
+    testQuestions: [],
+    selectedAnswers: {},
+    timeLeft: TEST_DURATION_SECONDS,
+    timerId: null,
+    submitted: false,
+  },
 };
+
+const authSection = document.getElementById("auth-section");
+const appShell = document.getElementById("app-shell");
+const activeBanner = document.getElementById("active-banner");
+const authMessage = document.getElementById("auth-message");
+const showLoginBtn = document.getElementById("show-login");
+const showRegisterBtn = document.getElementById("show-register");
+const loginForm = document.getElementById("login-form");
+const registerForm = document.getElementById("register-form");
+const logoutBtn = document.getElementById("logout-btn");
+const navLinks = Array.from(document.querySelectorAll(".nav-link"));
+const profileMeta = document.getElementById("profile-meta");
+const passwordForm = document.getElementById("password-form");
+const profileMessage = document.getElementById("profile-message");
+
+const dashDays = document.getElementById("dash-days");
+const dashAttempts = document.getElementById("dash-attempts");
+const dashBest = document.getElementById("dash-best");
+const dashLatest = document.getElementById("dash-latest");
 
 const startBtn = document.getElementById("start-btn");
 const statusCard = document.getElementById("status-card");
@@ -36,24 +66,307 @@ const resultSummary = document.getElementById("result-summary");
 const topicAnalysis = document.getElementById("topic-analysis");
 const answerReview = document.getElementById("answer-review");
 
-startBtn.addEventListener("click", startNewTest);
-submitBtn.addEventListener("click", () => finalizeTest(false));
-jumpBtn.addEventListener("click", scrollToFirstUnanswered);
+bootstrap();
+
+function bootstrap() {
+  appState.users = loadJson(STORAGE_KEYS.users, []);
+  pruneExpiredUsers();
+  appState.currentUserId = loadJson(STORAGE_KEYS.session, null);
+
+  if (!findCurrentUser()) {
+    setSession(null);
+    showAuth();
+  } else {
+    showApp();
+  }
+
+  wireEvents();
+}
+
+function wireEvents() {
+  showLoginBtn.addEventListener("click", () => switchAuthTab("login"));
+  showRegisterBtn.addEventListener("click", () => switchAuthTab("register"));
+
+  loginForm.addEventListener("submit", onLoginSubmit);
+  registerForm.addEventListener("submit", onRegisterSubmit);
+  logoutBtn.addEventListener("click", logout);
+  passwordForm.addEventListener("submit", onPasswordChangeSubmit);
+
+  navLinks.forEach((btn) => {
+    btn.addEventListener("click", () => switchView(btn.dataset.view));
+  });
+
+  startBtn.addEventListener("click", startNewTest);
+  submitBtn.addEventListener("click", () => finalizeTest(false));
+  jumpBtn.addEventListener("click", scrollToFirstUnanswered);
+}
+
+function switchAuthTab(tab) {
+  const isLogin = tab === "login";
+  loginForm.classList.toggle("hidden", !isLogin);
+  registerForm.classList.toggle("hidden", isLogin);
+  showLoginBtn.classList.toggle("active", isLogin);
+  showRegisterBtn.classList.toggle("active", !isLogin);
+  authMessage.textContent = "";
+}
+
+function onRegisterSubmit(event) {
+  event.preventDefault();
+  const name = document.getElementById("register-name").value.trim();
+  const email = document.getElementById("register-email").value.trim().toLowerCase();
+  const password = document.getElementById("register-password").value;
+
+  if (!name || !email || password.length < 8) {
+    authMessage.textContent = "Provide valid name, email, and a password with 8+ characters.";
+    return;
+  }
+
+  if (appState.users.some((u) => u.email === email)) {
+    authMessage.textContent = "This email is already registered. Please login.";
+    return;
+  }
+
+  const now = Date.now();
+  const newUser = {
+    id: crypto.randomUUID(),
+    fullName: name,
+    email,
+    password,
+    createdAt: now,
+    activeUntil: now + ACTIVE_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+  };
+
+  appState.users.push(newUser);
+  saveUsers();
+  setSession(newUser.id);
+
+  registerForm.reset();
+  authMessage.textContent = "Registration successful.";
+  showApp();
+}
+
+function onLoginSubmit(event) {
+  event.preventDefault();
+  const email = document.getElementById("login-email").value.trim().toLowerCase();
+  const password = document.getElementById("login-password").value;
+
+  const user = appState.users.find((u) => u.email === email && u.password === password);
+  if (!user) {
+    authMessage.textContent = "Invalid email or password.";
+    return;
+  }
+
+  if (Date.now() > user.activeUntil) {
+    removeUser(user.id);
+    authMessage.textContent = "Account expired and removed. Please register again.";
+    return;
+  }
+
+  setSession(user.id);
+  loginForm.reset();
+  authMessage.textContent = "";
+  showApp();
+}
+
+function onPasswordChangeSubmit(event) {
+  event.preventDefault();
+  const oldPassword = document.getElementById("old-password").value;
+  const newPassword = document.getElementById("new-password").value;
+  const user = findCurrentUser();
+
+  if (!user) {
+    logout();
+    return;
+  }
+
+  if (oldPassword !== user.password) {
+    profileMessage.textContent = "Current password does not match.";
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    profileMessage.textContent = "New password must be at least 8 characters.";
+    return;
+  }
+
+  user.password = newPassword;
+  saveUsers();
+  passwordForm.reset();
+  profileMessage.textContent = "Password updated successfully.";
+}
+
+function showAuth() {
+  authSection.classList.remove("hidden");
+  appShell.classList.add("hidden");
+  activeBanner.classList.add("hidden");
+  clearInterval(appState.mock.timerId);
+  switchAuthTab("login");
+}
+
+function showApp() {
+  const user = findCurrentUser();
+  if (!user) {
+    showAuth();
+    return;
+  }
+
+  const remaining = getRemainingDays(user.activeUntil);
+  if (remaining <= 0) {
+    removeUser(user.id);
+    authMessage.textContent = "Your 30-day window expired and account data was removed.";
+    showAuth();
+    return;
+  }
+
+  authSection.classList.add("hidden");
+  appShell.classList.remove("hidden");
+  activeBanner.classList.remove("hidden");
+  activeBanner.textContent = `${remaining} day${remaining === 1 ? "" : "s"} remaining in your active access window.`;
+
+  switchView("dashboard");
+  renderProfile();
+  renderDashboard();
+}
+
+function switchView(viewName) {
+  const views = ["dashboard", "study", "practice", "mock", "profile"];
+  views.forEach((name) => {
+    const panel = document.getElementById(`view-${name}`);
+    panel.classList.toggle("hidden", name !== viewName);
+  });
+
+  navLinks.forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.view === viewName);
+  });
+
+  if (viewName === "dashboard") {
+    renderDashboard();
+  }
+
+  if (viewName !== "mock") {
+    clearInterval(appState.mock.timerId);
+  }
+}
+
+function renderProfile() {
+  const user = findCurrentUser();
+  if (!user) {
+    return;
+  }
+
+  const joined = new Date(user.createdAt).toLocaleDateString();
+  const activeUntil = new Date(user.activeUntil).toLocaleDateString();
+  profileMeta.textContent = `${user.fullName} (${user.email}) | Joined: ${joined} | Active until: ${activeUntil}`;
+  profileMessage.textContent = "";
+}
+
+function renderDashboard() {
+  const user = findCurrentUser();
+  if (!user) {
+    return;
+  }
+
+  const userResults = loadMockResults().filter((row) => row.userId === user.id);
+  dashDays.textContent = String(getRemainingDays(user.activeUntil));
+  dashAttempts.textContent = String(userResults.length);
+
+  if (userResults.length === 0) {
+    dashBest.textContent = "-";
+    dashLatest.textContent = "No attempts yet";
+    return;
+  }
+
+  const best = Math.max(...userResults.map((r) => r.correct));
+  const latest = userResults[userResults.length - 1];
+  dashBest.textContent = `${best}/${TOTAL_QUESTIONS}`;
+  dashLatest.textContent = `${latest.correct}/${TOTAL_QUESTIONS} (${latest.pass ? "Pass" : "Fail"})`;
+}
+
+function logout() {
+  setSession(null);
+  clearInterval(appState.mock.timerId);
+  resetMockState();
+  showAuth();
+}
+
+function findCurrentUser() {
+  if (!appState.currentUserId) {
+    return null;
+  }
+  return appState.users.find((u) => u.id === appState.currentUserId) || null;
+}
+
+function setSession(userId) {
+  appState.currentUserId = userId;
+  localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(userId));
+}
+
+function saveUsers() {
+  localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(appState.users));
+}
+
+function removeUser(userId) {
+  appState.users = appState.users.filter((u) => u.id !== userId);
+  saveUsers();
+
+  const nextResults = loadMockResults().filter((r) => r.userId !== userId);
+  localStorage.setItem(STORAGE_KEYS.mockResults, JSON.stringify(nextResults));
+
+  if (appState.currentUserId === userId) {
+    setSession(null);
+  }
+}
+
+function pruneExpiredUsers() {
+  const now = Date.now();
+  const activeUsers = appState.users.filter((u) => now <= u.activeUntil);
+  if (activeUsers.length !== appState.users.length) {
+    const activeIds = new Set(activeUsers.map((u) => u.id));
+    const keptResults = loadMockResults().filter((r) => activeIds.has(r.userId));
+    appState.users = activeUsers;
+    saveUsers();
+    localStorage.setItem(STORAGE_KEYS.mockResults, JSON.stringify(keptResults));
+  }
+}
+
+function getRemainingDays(activeUntilMs) {
+  const diff = activeUntilMs - Date.now();
+  return Math.max(0, Math.ceil(diff / (24 * 60 * 60 * 1000)));
+}
+
+function loadMockResults() {
+  return loadJson(STORAGE_KEYS.mockResults, []);
+}
+
+function saveMockResult(result) {
+  const current = loadMockResults();
+  current.push(result);
+  localStorage.setItem(STORAGE_KEYS.mockResults, JSON.stringify(current));
+}
+
+function loadJson(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 async function startNewTest() {
-  clearInterval(state.timerId);
-  resetStateForNewTest();
+  clearInterval(appState.mock.timerId);
+  resetMockState();
 
   try {
-    if (state.bank.length === 0) {
+    if (appState.bank.length === 0) {
       const response = await fetch(QUESTION_BANK_PATH);
       if (!response.ok) {
         throw new Error(`Could not load ${QUESTION_BANK_PATH}`);
       }
-      state.bank = await response.json();
+      appState.bank = await response.json();
     }
 
-    state.testQuestions = buildMockTest(state.bank);
+    appState.mock.testQuestions = buildMockTest(appState.bank);
     renderTest();
     startTimer();
 
@@ -63,19 +376,24 @@ async function startNewTest() {
 
     updateLiveMetrics();
   } catch (error) {
-    alert(`Failed to start test: ${error.message}`);
+    window.alert(`Failed to start test: ${error.message}`);
   }
 }
 
-function resetStateForNewTest() {
-  state.testQuestions = [];
-  state.selectedAnswers = {};
-  state.timeLeft = TEST_DURATION_SECONDS;
-  state.submitted = false;
+function resetMockState() {
+  appState.mock.testQuestions = [];
+  appState.mock.selectedAnswers = {};
+  appState.mock.timeLeft = TEST_DURATION_SECONDS;
+  appState.mock.submitted = false;
+
   testForm.innerHTML = "";
   topicAnalysis.innerHTML = "";
   answerReview.innerHTML = "";
   resultSummary.innerHTML = "";
+
+  statusCard.classList.add("hidden");
+  testSection.classList.add("hidden");
+  resultSection.classList.add("hidden");
 }
 
 function buildMockTest(allQuestions) {
@@ -113,7 +431,7 @@ function groupByTopic(questions) {
 function renderTest() {
   testForm.innerHTML = "";
 
-  state.testQuestions.forEach((q, qIndex) => {
+  appState.mock.testQuestions.forEach((q, qIndex) => {
     const qWrap = document.createElement("article");
     qWrap.className = "question";
 
@@ -135,7 +453,7 @@ function renderTest() {
       input.id = id;
       input.value = String(aIndex);
       input.addEventListener("change", () => {
-        state.selectedAnswers[qIndex] = aIndex;
+        appState.mock.selectedAnswers[qIndex] = aIndex;
         updateLiveMetrics();
       });
 
@@ -155,36 +473,36 @@ function renderTest() {
 
 function startTimer() {
   renderTimer();
-  state.timerId = setInterval(() => {
-    state.timeLeft -= 1;
+  appState.mock.timerId = setInterval(() => {
+    appState.mock.timeLeft -= 1;
     renderTimer();
 
-    if (state.timeLeft <= 0) {
+    if (appState.mock.timeLeft <= 0) {
       finalizeTest(true);
     }
   }, 1000);
 }
 
 function renderTimer() {
-  const mins = String(Math.max(0, Math.floor(state.timeLeft / 60))).padStart(2, "0");
-  const secs = String(Math.max(0, state.timeLeft % 60)).padStart(2, "0");
+  const mins = String(Math.max(0, Math.floor(appState.mock.timeLeft / 60))).padStart(2, "0");
+  const secs = String(Math.max(0, appState.mock.timeLeft % 60)).padStart(2, "0");
   timerEl.textContent = `${mins}:${secs}`;
-  timerEl.classList.toggle("warn", state.timeLeft <= 300);
+  timerEl.classList.toggle("warn", appState.mock.timeLeft <= 300);
 }
 
 function updateLiveMetrics() {
-  const answeredCount = Object.keys(state.selectedAnswers).length;
+  const answeredCount = Object.keys(appState.mock.selectedAnswers).length;
   answeredCountEl.textContent = `${answeredCount} / ${TOTAL_QUESTIONS}`;
 
-  const currentCorrect = state.testQuestions.reduce((acc, q, idx) => {
-    const chosen = state.selectedAnswers[idx];
+  const currentCorrect = appState.mock.testQuestions.reduce((acc, q, idx) => {
+    const chosen = appState.mock.selectedAnswers[idx];
     if (chosen === undefined) {
       return acc;
     }
     return acc + (q.answers[chosen]?.correct ? 1 : 0);
   }, 0);
 
-  liveScoreEl.textContent = `${currentCorrect}`;
+  liveScoreEl.textContent = String(currentCorrect);
 
   const completionPct = Math.round((answeredCount / TOTAL_QUESTIONS) * 100);
   progressFillEl.style.width = `${completionPct}%`;
@@ -195,12 +513,12 @@ function updateLiveMetrics() {
 }
 
 function finalizeTest(fromTimeout) {
-  if (state.submitted) {
+  if (appState.mock.submitted) {
     return;
   }
 
   if (!fromTimeout) {
-    const unanswered = TOTAL_QUESTIONS - Object.keys(state.selectedAnswers).length;
+    const unanswered = TOTAL_QUESTIONS - Object.keys(appState.mock.selectedAnswers).length;
     if (unanswered > 0) {
       const proceed = window.confirm(`You still have ${unanswered} unanswered question(s). Submit anyway?`);
       if (!proceed) {
@@ -210,18 +528,33 @@ function finalizeTest(fromTimeout) {
     }
   }
 
-  state.submitted = true;
-  clearInterval(state.timerId);
+  appState.mock.submitted = true;
+  clearInterval(appState.mock.timerId);
 
-  const scored = scoreTest(state.testQuestions, state.selectedAnswers);
+  const scored = scoreTest(appState.mock.testQuestions, appState.mock.selectedAnswers);
   renderResults(scored, fromTimeout);
 
+  const user = findCurrentUser();
+  if (user) {
+    saveMockResult({
+      userId: user.id,
+      correct: scored.correct,
+      total: scored.total,
+      pass: scored.pass,
+      percentage: scored.percentage,
+      createdAt: Date.now(),
+    });
+  }
+
+  renderDashboard();
   resultSection.classList.remove("hidden");
   testSection.classList.add("hidden");
 }
 
 function scrollToFirstUnanswered() {
-  const firstUnansweredIndex = state.testQuestions.findIndex((_, idx) => state.selectedAnswers[idx] === undefined);
+  const firstUnansweredIndex = appState.mock.testQuestions.findIndex(
+    (_, idx) => appState.mock.selectedAnswers[idx] === undefined
+  );
   if (firstUnansweredIndex === -1) {
     return;
   }

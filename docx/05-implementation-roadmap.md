@@ -2,6 +2,18 @@
 
 ## 1. Milestone Plan
 
+### Implementation Status Update (2026-06-19)
+- Milestone A started in current codebase (single-page implementation baseline).
+- Completed now:
+  - Registration, login, logout flows
+  - 30-day active-window banner and expiry cleanup behavior
+  - Profile page with old-password validation and password change flow
+  - Dashboard summary cards for active days and mock history
+  - Existing mock test module integrated into app navigation shell
+- Next in sequence:
+  - Milestone B content and study ingestion + progress models
+  - Milestone C practice engine implementation
+
 ### Milestone A - Foundation (Week 1)
 - Initialize Django project and apps
 - Configure PostgreSQL and environment settings

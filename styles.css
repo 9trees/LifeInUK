@@ -83,10 +83,106 @@ h1 {
   color: var(--muted);
 }
 
+.banner {
+  display: inline-block;
+  background: #ecfeff;
+  color: #0c4a6e;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
 .card {
   padding: 20px;
   margin-bottom: 16px;
   animation: slideFade 0.45s ease;
+}
+
+.auth-shell {
+  max-width: 540px;
+  margin: 0 auto 16px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.auth-form {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.auth-form span {
+  font-size: 0.93rem;
+  color: var(--muted);
+}
+
+.auth-form input {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.auth-form input:focus {
+  outline: 2px solid #99f6e4;
+  outline-offset: 1px;
+}
+
+.form-message {
+  margin: 10px 0 0;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.nav-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nav-link.active,
+.auth-tabs .btn.active {
+  background: #111827;
+  color: #ffffff;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fcfcfd;
+}
+
+.profile-meta {
+  margin: 0 0 14px;
+  color: var(--muted);
+}
+
+.profile-form {
+  max-width: 480px;
 }
 
 .status-card {
@@ -344,6 +440,24 @@ h1 {
 
   .status-card {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav-links {
+    width: 100%;
+  }
+
+  .nav-links .btn,
+  .nav-card > .btn {
+    width: 100%;
   }
 
   .quick-actions {

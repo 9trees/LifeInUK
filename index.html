@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Life in the UK Mock Test</title>
+  <title>Life in the UK Prep Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet" />
@@ -15,54 +15,163 @@
 
   <main class="container">
     <header class="hero">
-      <h1>Life in the UK Mock Test</h1>
+      <h1>Life in the UK Prep</h1>
       <p>
-        24 questions in 45 minutes. Pass mark: <strong>18/24 (75%)</strong>.
-        Topic-balanced question selection every time.
+        Build readiness with study, practice, and full mock tests.
+        Includes 30-day active access tracking and progress visibility.
       </p>
-      <button id="start-btn" class="btn btn-primary">Start New Mock Test</button>
+      <div id="active-banner" class="banner hidden" aria-live="polite"></div>
     </header>
 
-    <section id="status-card" class="card status-card hidden" aria-live="polite">
-      <div>
-        <p class="label">Time Remaining</p>
-        <p id="timer" class="timer">45:00</p>
+    <section id="auth-section" class="card auth-shell">
+      <div class="auth-tabs">
+        <button id="show-login" class="btn btn-ghost active" type="button">Login</button>
+        <button id="show-register" class="btn btn-ghost" type="button">Register</button>
       </div>
-      <div>
-        <p class="label">Answered</p>
-        <p id="answered-count" class="metric">0 / 24</p>
-      </div>
-      <div>
-        <p class="label">Current Score</p>
-        <p id="live-score" class="metric">0</p>
-      </div>
-      <div class="progress-wrap" aria-hidden="true">
-        <div class="progress-track">
-          <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+
+      <form id="login-form" class="auth-form">
+        <label>
+          <span>Email</span>
+          <input id="login-email" type="email" required />
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="login-password" type="password" required minlength="8" />
+        </label>
+        <button class="btn btn-primary" type="submit">Login</button>
+      </form>
+
+      <form id="register-form" class="auth-form hidden">
+        <label>
+          <span>Full Name</span>
+          <input id="register-name" type="text" required minlength="2" />
+        </label>
+        <label>
+          <span>Email</span>
+          <input id="register-email" type="email" required />
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="register-password" type="password" required minlength="8" />
+        </label>
+        <button class="btn btn-primary" type="submit">Create Account</button>
+      </form>
+
+      <p id="auth-message" class="form-message" aria-live="polite"></p>
+    </section>
+
+    <section id="app-shell" class="hidden">
+      <nav class="card nav-card">
+        <div class="nav-links">
+          <button class="btn btn-ghost nav-link active" data-view="dashboard" type="button">Dashboard</button>
+          <button class="btn btn-ghost nav-link" data-view="study" type="button">Study</button>
+          <button class="btn btn-ghost nav-link" data-view="practice" type="button">Practice</button>
+          <button class="btn btn-ghost nav-link" data-view="mock" type="button">Mock Test</button>
+          <button class="btn btn-ghost nav-link" data-view="profile" type="button">Profile</button>
         </div>
-        <p id="progress-text" class="progress-text">0% completed</p>
-      </div>
-      <div class="quick-actions">
-        <button id="jump-btn" class="btn btn-ghost" type="button">Go To First Unanswered</button>
-      </div>
-    </section>
+        <button id="logout-btn" class="btn btn-accent" type="button">Logout</button>
+      </nav>
 
-    <section id="test-section" class="card hidden">
-      <form id="test-form"></form>
-      <div class="actions">
-        <button id="submit-btn" class="btn btn-accent" type="button">Submit Test</button>
-      </div>
-    </section>
+      <section id="view-dashboard" class="card view-panel">
+        <h2>Dashboard</h2>
+        <div class="dashboard-grid">
+          <article class="metric-card">
+            <p class="label">Active Days Remaining</p>
+            <p id="dash-days" class="metric">-</p>
+          </article>
+          <article class="metric-card">
+            <p class="label">Mock Attempts</p>
+            <p id="dash-attempts" class="metric">0</p>
+          </article>
+          <article class="metric-card">
+            <p class="label">Best Mock Score</p>
+            <p id="dash-best" class="metric">-</p>
+          </article>
+          <article class="metric-card">
+            <p class="label">Latest Result</p>
+            <p id="dash-latest" class="metric">-</p>
+          </article>
+        </div>
+      </section>
 
-    <section id="result-section" class="card hidden" aria-live="polite">
-      <h2>Results</h2>
-      <div id="result-summary" class="result-summary"></div>
-      <h3>Performance by Topic</h3>
-      <div id="topic-analysis" class="topic-analysis"></div>
-      <details id="review-details">
-        <summary>Review Answers</summary>
-        <div id="answer-review" class="answer-review"></div>
-      </details>
+      <section id="view-study" class="card view-panel hidden">
+        <h2>Study</h2>
+        <p>Study reader and page progression will be implemented in the next milestone.</p>
+      </section>
+
+      <section id="view-practice" class="card view-panel hidden">
+        <h2>Practice</h2>
+        <p>Practice setup and session engine will be implemented in the next milestone.</p>
+      </section>
+
+      <section id="view-mock" class="view-panel hidden">
+        <div class="card">
+          <h2>Mock Test</h2>
+          <p>24 questions in 45 minutes. Pass mark: <strong>18/24 (75%)</strong>.</p>
+          <button id="start-btn" class="btn btn-primary" type="button">Start New Mock Test</button>
+        </div>
+
+        <section id="status-card" class="card status-card hidden" aria-live="polite">
+          <div>
+            <p class="label">Time Remaining</p>
+            <p id="timer" class="timer">45:00</p>
+          </div>
+          <div>
+            <p class="label">Answered</p>
+            <p id="answered-count" class="metric">0 / 24</p>
+          </div>
+          <div>
+            <p class="label">Current Score</p>
+            <p id="live-score" class="metric">0</p>
+          </div>
+          <div class="progress-wrap" aria-hidden="true">
+            <div class="progress-track">
+              <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="progress-text">0% completed</p>
+          </div>
+          <div class="quick-actions">
+            <button id="jump-btn" class="btn btn-ghost" type="button">Go To First Unanswered</button>
+          </div>
+        </section>
+
+        <section id="test-section" class="card hidden">
+          <form id="test-form"></form>
+          <div class="actions">
+            <button id="submit-btn" class="btn btn-accent" type="button">Submit Test</button>
+          </div>
+        </section>
+
+        <section id="result-section" class="card hidden" aria-live="polite">
+          <h3>Results</h3>
+          <div id="result-summary" class="result-summary"></div>
+          <h4>Performance by Topic</h4>
+          <div id="topic-analysis" class="topic-analysis"></div>
+          <details id="review-details">
+            <summary>Review Answers</summary>
+            <div id="answer-review" class="answer-review"></div>
+          </details>
+        </section>
+      </section>
+
+      <section id="view-profile" class="card view-panel hidden">
+        <h2>Profile</h2>
+        <p id="profile-meta" class="profile-meta"></p>
+
+        <form id="password-form" class="auth-form profile-form">
+          <label>
+            <span>Current Password</span>
+            <input id="old-password" type="password" required minlength="8" />
+          </label>
+          <label>
+            <span>New Password</span>
+            <input id="new-password" type="password" required minlength="8" />
+          </label>
+          <button class="btn btn-primary" type="submit">Change Password</button>
+        </form>
+
+        <p id="profile-message" class="form-message" aria-live="polite"></p>
+      </section>
     </section>
   </main>
 
