@@ -1,0 +1,75 @@
+[
+  {
+    "topic": "The values and principles of the UK",
+    "question": {
+      "text": "Is the statement below TRUE or FALSE?\r\nIn the UK you are expected to respect the rights of others to have their own opinions."
+    },
+    "answers": [
+      {
+        "correct": true,
+        "text": "A) TRUE"
+      },
+      {
+        "correct": false,
+        "text": "B) FALSE"
+      }
+    ],
+    "explanation": {
+      "text": "There are responsibilities and freedoms which are shared by all those living in the UK. These include respecting the rights of others, including their right to their own opinions."
+    }
+  },
+  {
+    "topic": "The values and principles of the UK",
+    "question": {
+      "text": "Which TWO of the following are fundamental principles of British life?"
+    },
+    "answers": [
+      {
+        "correct": false,
+        "text": "A) Only driving your car on weekdays and participation in community life"
+      },
+      {
+        "correct": true,
+        "text": "B) Participation in community life and tolerance of those with different faiths and beliefs"
+      },
+      {
+        "correct": false,
+        "text": "C) Only driving your car on weekdays and growing your own fruit and vegetables"
+      },
+      {
+        "correct": false,
+        "text": "D) Growing your own fruit and vegetables and tolerance of those with different faiths and beliefs"
+      }
+    ],
+    "explanation": {
+      "text": "British society is founded on fundamental values and principles which all those living in the UK should respect and support. These include participation in community life and tolerance of those with different faiths and beliefs."
+    }
+  },
+  {
+    "topic": "The values and principles of the UK",
+    "question": {
+      "text": "Which of the following is a fundamental principle of British life?"
+    },
+    "answers": [
+      {
+        "correct": false,
+        "text": "A) Extremism"
+      },
+      {
+        "correct": true,
+        "text": "B) Individual liberty"
+      },
+      {
+        "correct": false,
+        "text": "C) Intolerance"
+      },
+      {
+        "correct": false,
+        "text": "D) Inequality"
+      }
+    ],
+    "explanation": {
+      "text": "Individual liberty is a fundamental principle of British life. There is no place in British society for extremism or intolerance."
+    }
+  }
+]

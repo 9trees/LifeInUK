@@ -1,0 +1,83 @@
+# Implementation Roadmap (Pre-Deployment)
+
+## 1. Milestone Plan
+
+### Milestone A - Foundation (Week 1)
+- Initialize Django project and apps
+- Configure PostgreSQL and environment settings
+- Implement custom user model and auth flows
+- Implement 30-day active window and banner logic
+- Create profile and change-password flow
+
+Exit criteria:
+- User can register/login/logout/change password
+- Remaining-days banner works
+
+### Milestone B - Content and Study (Week 2)
+- Build topic and study content models
+- Create MHTML import command for study pages
+- Implement study plan page and progress model
+- Implement study reader with sequential navigation
+
+Exit criteria:
+- All study pages imported and browsable
+- Study progress saved and visible
+
+### Milestone C - Practice Engine (Week 3)
+- Import 422-question bank into models
+- Practice setup screen (topics + mode)
+- Question-by-question practice UI with explanation after answer
+- Session scoring and persistence
+- Practice analytics by topic
+
+Exit criteria:
+- Practice modes work (10/20/30/all/unanswered)
+- Session and topic metrics tracked
+
+### Milestone D - Mock Test Engine (Week 4)
+- Blueprint-based mock generator
+- 45-minute timer and auto-submit
+- User behavior event tracking per question
+- Mock result and insights page
+
+Exit criteria:
+- Full mock lifecycle with tracking and score
+- Topic and behavior metrics available
+
+### Milestone E - Dashboard and Intelligence (Week 5)
+- Dashboard cards + charts
+- Topic-wise and overall progress summaries
+- Insight generation rules and recommendations
+
+Exit criteria:
+- Unified dashboard reflects study/practice/mock
+- Insight cards generated per user
+
+### Milestone F - QA and Launch Readiness (Week 6)
+- Integration testing
+- Data validation checks
+- Performance pass and security checks
+- Deployment rehearsal and rollback verification
+
+Exit criteria:
+- UAT sign-off
+- Production-ready deployment package
+
+## 2. Backlog Priorities
+- P0: auth, question import, practice engine, mock engine, tracking
+- P1: study parser fidelity, dashboard visuals, insights
+- P2: richer personalization, notifications, advanced analytics
+
+## 3. Testing Strategy
+- Unit tests: model rules, selection logic, scoring logic
+- Integration tests: practice/mock session lifecycle
+- UI tests: key flows for register, practice, mock, dashboard
+- Data tests: import consistency for MHTML and JSON
+
+## 4. Risks and Mitigations
+- MHTML parsing inconsistency:
+  - Mitigation: source parser abstraction with manual override support
+- Tracking volume growth:
+  - Mitigation: summary tables + periodic aggregation jobs
+- Scope expansion:
+  - Mitigation: strict milestone exits and release cut lines
