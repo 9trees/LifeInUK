@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Study Plan{% endblock %}
+{% block content %}
+<h2 class="mb-3">Study Plan</h2>
+<p class="text-muted">Follow the weekly milestones and tick items as you complete them.</p>
+<div class="card shadow-sm">
+  <ul class="list-group list-group-flush">
+    {% for row in rows %}
+    <li class="list-group-item d-flex align-items-center">
+      <form method="post" action="{% url 'study:toggle_plan' row.item.id %}" class="me-2">
+        {% csrf_token %}
+        <input type="checkbox" class="form-check-input" onchange="this.form.submit()" {% if row.done %}checked{% endif %}>
+      </form>
+      <span>
+        <span class="badge bg-secondary me-2">{% if row.item.week_no %}Week {{ row.item.week_no }}{% else %}Prep{% endif %}</span>
+        {{ row.item.title }}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Mock Test{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2 class="mb-0">Mock Test</h2>
+  <div class="fs-4">Time left: <span id="timer" class="fw-bold">45:00</span></div>
+</div>
+<p class="text-muted">24 questions, 45 minutes. Pass mark: {{ pass_mark }}/24.</p>
+
+<form method="post" action="{% url 'mocktest:submit' session.id %}" id="mock-form">
+  {% csrf_token %}
+  <input type="hidden" name="elapsed_seconds" id="elapsed_seconds" value="0">
+  {% for q in questions %}
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <p class="fw-semibold">{{ q.order|add:1 }}. {{ q.question.text }}</p>
+      {% for opt in q.options %}
+      <label class="d-block border rounded p-2 mb-2 option-label">
+        <input class="form-check-input me-2" type="radio" name="q_{{ q.question.id }}" value="{{ opt.id }}">
+        {{ opt.text }}
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+  <button class="btn btn-success btn-lg" type="submit">Submit Test</button>
+</form>
+
+<script>
+  let remaining = {{ duration }};
+  const startTs = Date.now();
+  const timerEl = document.getElementById('timer');
+  const form = document.getElementById('mock-form');
+
+  const tick = setInterval(() => {
+    remaining -= 1;
+    const m = String(Math.max(0, Math.floor(remaining / 60))).padStart(2, '0');
+    const s = String(Math.max(0, remaining % 60)).padStart(2, '0');
+    timerEl.textContent = `${m}:${s}`;
+    if (remaining <= 300) timerEl.classList.add('timer-warn');
+    if (remaining <= 0) {
+      clearInterval(tick);
+      submitForm();
+    }
+  }, 1000);
+
+  function submitForm() {
+    document.getElementById('elapsed_seconds').value = Math.round((Date.now() - startTs) / 1000);
+    form.submit();
+  }
+  form.addEventListener('submit', (e) => {
+    document.getElementById('elapsed_seconds').value = Math.round((Date.now() - startTs) / 1000);
+  });
+</script>
+{% endblock %}

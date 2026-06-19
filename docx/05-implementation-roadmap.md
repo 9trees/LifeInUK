@@ -2,7 +2,31 @@
 
 ## 1. Milestone Plan
 
-### Implementation Status Update (2026-06-19)
+### Implementation Status Update (2026-06-19) — Django build
+
+The implementation now follows the planned Django architecture under `django_app/`.
+The earlier static HTML/JS files (index.html, app.js, styles.css) were a prototype
+and are superseded by the Django app.
+
+Django apps and status:
+- accounts: custom email user, register/login/logout, profile + password change,
+  30-day active window via middleware + banner context processor — DONE
+- content: Topic, StudyPage (JSON blocks), StudyPlanItem + import commands — DONE
+- study: rich study reader (headings, bullets, images, tables), sequential nav,
+  per-user progress (visits, status, completion, time) — DONE
+- practice: Question/AnswerOption/PracticeSession/PracticeResponse, topic + mode
+  selection (random 10/20/30/all/unanswered), one-at-a-time flow with explanation,
+  topic scoring — DONE
+- mocktest: 24-question blueprint generator, 45-min timer + auto-submit, behavior
+  events, pass mark 18, topic results — DONE
+- analytics: Bootstrap 5 + Chart.js dashboard (topic accuracy, mock trend,
+  weakest topic) — DONE
+
+Data imported: 5 topics, 27 study pages (with 47 images), 29 plan items, 422 questions.
+Verified end-to-end in the browser (register → study image page → practice
+explanation → mock 24Q timer). Default DB is SQLite; set DATABASE_URL for Postgres.
+
+### (Legacy prototype) Implementation Status Update (2026-06-19)
 - Milestone A started in current codebase (single-page implementation baseline).
 - Completed now:
   - Registration, login, logout flows

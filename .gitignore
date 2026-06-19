@@ -6,6 +6,10 @@
 __pycache__/
 *.pyc
 
+# Django
+django_app/db.sqlite3
+django_app/staticfiles/
+
 # Research artifacts
 study_site_inspection.json
 

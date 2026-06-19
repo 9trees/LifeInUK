@@ -1,0 +1,15 @@
+body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+.study-content { line-height: 1.7; font-size: 1.02rem; }
+.study-content h3, .study-content h4, .study-content h5 { margin-top: 1.2rem; color: #0d6efd; }
+.study-content ul, .study-content ol { margin-bottom: 1rem; }
+.study-figure { text-align: center; margin: 1.25rem 0; }
+.study-figure img { max-width: 100%; height: auto; border-radius: .5rem; border: 1px solid #dee2e6; }
+.study-figure figcaption { color: #6c757d; font-style: italic; margin-top: .5rem; }
+.study-table { width: 100%; }
+
+.option-label { cursor: pointer; }
+.option-label.correct { background: #d1e7dd; border-color: #badbcc; }
+.option-label.wrong { background: #f8d7da; border-color: #f5c2c7; }
+
+.timer-warn { color: #dc3545 !important; }

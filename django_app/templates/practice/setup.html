@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Practice{% endblock %}
+{% block content %}
+<h2 class="mb-3">Practice</h2>
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      <h5>Choose topics</h5>
+      <div class="row mb-3">
+        {% for topic in topics %}
+        <div class="col-md-6">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="topics" value="{{ topic.code }}" id="t{{ topic.code }}">
+            <label class="form-check-label" for="t{{ topic.code }}">{{ topic.code }}. {{ topic.name }}</label>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <h5>Mode</h5>
+      <select name="mode" class="form-select mb-3">
+        <option value="random_10">Random 10</option>
+        <option value="random_20">Random 20</option>
+        <option value="random_30">Random 30</option>
+        <option value="all">All questions</option>
+        <option value="unanswered">All unanswered questions</option>
+      </select>
+
+      <button class="btn btn-primary">Start Practice</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

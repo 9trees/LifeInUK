@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ page.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{% url 'study:index' %}">Study</a></li>
+    <li class="breadcrumb-item active">{{ page.topic.name }}</li>
+  </ol>
+</nav>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2>{{ page.title }}</h2>
+    <p class="text-muted">{{ page.topic.name }} — Section {{ page.topic.code }}.{{ page.sequence_no }}</p>
+    <hr>
+    <div class="study-content">
+      {% for block in page.blocks %}
+        {% if block.type == "heading" %}
+          <h4>{{ block.text }}</h4>
+        {% elif block.type == "paragraph" %}
+          <p>{{ block.text }}</p>
+        {% elif block.type == "bullets" %}
+          {% if block.ordered %}<ol>{% else %}<ul>{% endif %}
+            {% for item in block.items %}<li>{{ item }}</li>{% endfor %}
+          {% if block.ordered %}</ol>{% else %}</ul>{% endif %}
+        {% elif block.type == "bullet" %}
+          <ul><li>{{ block.text }}</li></ul>
+        {% elif block.type == "image" %}
+          <figure class="study-figure">
+            <img src="/media/{{ block.src }}" alt="{{ block.alt }}" loading="lazy">
+            {% if block.alt %}<figcaption>{{ block.alt }}</figcaption>{% endif %}
+          </figure>
+        {% elif block.type == "table" %}
+          <div class="table-responsive">
+            <table class="table table-bordered study-table">
+              {% for row in block.rows %}
+              <tr>
+                {% for cell in row %}
+                  {% if forloop.parentloop.first %}<th>{{ cell }}</th>{% else %}<td>{{ cell }}</td>{% endif %}
+                {% endfor %}
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <hr>
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        {% if prev_page %}<a class="btn btn-outline-secondary" href="{% url 'study:page' prev_page.slug %}">&larr; Previous</a>{% endif %}
+      </div>
+      <form method="post" action="{% url 'study:complete' page.slug %}">
+        {% csrf_token %}
+        <input type="hidden" name="seconds" id="seconds" value="0">
+        <button class="btn {% if progress.status == 'completed' %}btn-success disabled{% else %}btn-primary{% endif %}">
+          {% if progress.status == 'completed' %}Completed{% else %}Mark as Completed{% endif %}
+        </button>
+      </form>
+      <div>
+        {% if next_page %}<a class="btn btn-primary" href="{% url 'study:page' next_page.slug %}">Next &rarr;</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const start = Date.now();
+  const secondsInput = document.getElementById('seconds');
+  document.querySelector('form[action$="/complete/"]').addEventListener('submit', () => {
+    secondsInput.value = Math.round((Date.now() - start) / 1000);
+  });
+</script>
+{% endblock %}

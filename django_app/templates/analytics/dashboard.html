@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2 class="mb-3">Dashboard</h2>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <p class="text-muted mb-1">Active Days Left</p>
+      <p class="fs-3 fw-bold mb-0">{{ remaining_days }}</p>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <p class="text-muted mb-1">Study Completion</p>
+      <p class="fs-3 fw-bold mb-0">{{ study_percent }}%</p>
+      <small class="text-muted">{{ completed_pages }}/{{ total_pages }} pages</small>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <p class="text-muted mb-1">Best Mock</p>
+      <p class="fs-3 fw-bold mb-0">{% if best_score is not None %}{{ best_score }}/24{% else %}-{% endif %}</p>
+      <small class="text-muted">{{ mock_count }} attempt{{ mock_count|pluralize }}</small>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <p class="text-muted mb-1">Practice Accuracy</p>
+      <p class="fs-3 fw-bold mb-0">{{ practice_accuracy }}%</p>
+      <small class="text-muted">{{ practice_total }} answered</small>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm"><div class="card-body">
+      <h5>Topic-wise Accuracy</h5>
+      <canvas id="topicChart"></canvas>
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm"><div class="card-body">
+      <h5>Mock Score Trend</h5>
+      <canvas id="trendChart"></canvas>
+    </div></div>
+  </div>
+</div>
+
+{% if weakest %}
+<div class="alert alert-warning mt-3">
+  <strong>Weakest topic:</strong> {{ weakest.name }} ({{ weakest.percent }}%). Consider more practice here.
+</div>
+{% endif %}
+
+{{ topic_rows|json_script:"topic-data" }}
+{{ mock_trend|json_script:"trend-data" }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const topicData = JSON.parse(document.getElementById('topic-data').textContent);
+  const trendData = JSON.parse(document.getElementById('trend-data').textContent);
+
+  if (topicData.length) {
+    new Chart(document.getElementById('topicChart'), {
+      type: 'bar',
+      data: {
+        labels: topicData.map(t => t.name),
+        datasets: [{ label: 'Accuracy %', data: topicData.map(t => t.percent), backgroundColor: '#0d6efd' }]
+      },
+      options: { indexAxis: 'y', scales: { x: { max: 100 } } }
+    });
+  }
+
+  if (trendData.length) {
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: trendData.map(t => t.label),
+        datasets: [{ label: 'Score /24', data: trendData.map(t => t.score), borderColor: '#198754', tension: .3 }]
+      },
+      options: { scales: { y: { max: 24, beginAtZero: true } } }
+    });
+  }
+</script>
+{% endblock %}

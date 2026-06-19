@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Mock Result{% endblock %}
+{% block content %}
+<h2 class="mb-3">Mock Test Result</h2>
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <p class="fs-4 mb-1"><strong>{{ session.correct_answers }}</strong> / {{ session.total_questions }} ({{ session.score_percent }}%)</p>
+    <span class="badge {% if session.pass_status %}bg-success{% else %}bg-danger{% endif %} fs-6">
+      {% if session.pass_status %}PASS{% else %}FAIL{% endif %}
+    </span>
+    <p class="text-muted mt-2 mb-0">Time taken: {{ session.duration_seconds }}s</p>
+  </div>
+</div>
+
+<h4>Performance by Topic</h4>
+<div class="card shadow-sm mb-3">
+  <ul class="list-group list-group-flush">
+    {% for name, stats in topic_stats.items %}
+    <li class="list-group-item d-flex justify-content-between"><span>{{ name }}</span><span>{{ stats.correct }}/{{ stats.total }}</span></li>
+    {% endfor %}
+  </ul>
+</div>
+
+<a class="btn btn-primary" href="{% url 'mocktest:start' %}">New Mock Test</a>
+<a class="btn btn-outline-secondary" href="{% url 'analytics:dashboard' %}">Dashboard</a>
+{% endblock %}
