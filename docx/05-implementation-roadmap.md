@@ -10,8 +10,14 @@
   - Profile page with old-password validation and password change flow
   - Dashboard summary cards for active days and mock history
   - Existing mock test module integrated into app navigation shell
+- Milestone B started in current codebase.
+- Completed now (Milestone B slice):
+  - MHTML study-page importer script and generated JSON dataset (27 pages)
+  - Study plan extraction and checklist dataset generation
+  - Study view with topic filtering, page list, and per-page status
+  - Study reader with previous/next navigation and resume-last-page
+  - Study progress tracking per user: visits, completion, time spent, last viewed
 - Next in sequence:
-  - Milestone B content and study ingestion + progress models
   - Milestone C practice engine implementation
 
 ### Milestone A - Foundation (Week 1)

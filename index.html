@@ -96,7 +96,39 @@
 
       <section id="view-study" class="card view-panel hidden">
         <h2>Study</h2>
-        <p>Study reader and page progression will be implemented in the next milestone.</p>
+        <div class="study-grid">
+          <section class="study-panel">
+            <h3>Study Plan</h3>
+            <p class="study-subtext">Follow weekly milestones and track completed steps.</p>
+            <div id="study-plan-list" class="study-plan-list"></div>
+          </section>
+
+          <section class="study-panel">
+            <h3>Topic Pages</h3>
+            <div class="study-controls">
+              <label>
+                <span>Topic</span>
+                <select id="study-topic-filter"></select>
+              </label>
+              <button id="resume-study-btn" class="btn btn-ghost" type="button">Resume Last Page</button>
+            </div>
+            <div id="study-topic-progress" class="study-topic-progress"></div>
+            <div id="study-page-list" class="study-page-list"></div>
+          </section>
+        </div>
+
+        <section id="study-reader" class="study-reader hidden">
+          <div class="study-reader-head">
+            <h3 id="study-page-title"></h3>
+            <p id="study-page-meta" class="study-subtext"></p>
+          </div>
+          <article id="study-page-content" class="study-page-content"></article>
+          <div class="study-reader-actions">
+            <button id="study-prev-btn" class="btn btn-ghost" type="button">Previous</button>
+            <button id="study-complete-btn" class="btn btn-primary" type="button">Mark as Completed</button>
+            <button id="study-next-btn" class="btn btn-accent" type="button">Next</button>
+          </div>
+        </section>
       </section>
 
       <section id="view-practice" class="card view-panel hidden">

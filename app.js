@@ -1,4 +1,6 @@
 const QUESTION_BANK_PATH = "./lituk_questions_422.json";
+const STUDY_CONTENT_PATH = "./study_content.json";
+const STUDY_PLAN_PATH = "./study_plan.json";
 const TEST_DURATION_SECONDS = 45 * 60;
 const PASS_MARK = 18;
 const TOTAL_QUESTIONS = 24;
@@ -8,6 +10,8 @@ const STORAGE_KEYS = {
   users: "lituk.users.v1",
   session: "lituk.session.v1",
   mockResults: "lituk.mock.results.v1",
+  studyProgress: "lituk.study.progress.v1",
+  studyPlan: "lituk.study.plan.v1",
 };
 
 const TOPIC_REQUIREMENTS = {
@@ -29,6 +33,14 @@ const appState = {
     timerId: null,
     submitted: false,
   },
+  study: {
+    loaded: false,
+    topicNames: {},
+    pages: [],
+    planItems: [],
+    currentPageId: null,
+    pageStartedAt: null,
+  },
 };
 
 const authSection = document.getElementById("auth-section");
@@ -49,6 +61,19 @@ const dashDays = document.getElementById("dash-days");
 const dashAttempts = document.getElementById("dash-attempts");
 const dashBest = document.getElementById("dash-best");
 const dashLatest = document.getElementById("dash-latest");
+
+const studyPlanList = document.getElementById("study-plan-list");
+const studyTopicFilter = document.getElementById("study-topic-filter");
+const studyTopicProgress = document.getElementById("study-topic-progress");
+const studyPageList = document.getElementById("study-page-list");
+const studyReader = document.getElementById("study-reader");
+const studyPageTitle = document.getElementById("study-page-title");
+const studyPageMeta = document.getElementById("study-page-meta");
+const studyPageContent = document.getElementById("study-page-content");
+const studyPrevBtn = document.getElementById("study-prev-btn");
+const studyNextBtn = document.getElementById("study-next-btn");
+const studyCompleteBtn = document.getElementById("study-complete-btn");
+const resumeStudyBtn = document.getElementById("resume-study-btn");
 
 const startBtn = document.getElementById("start-btn");
 const statusCard = document.getElementById("status-card");
@@ -99,6 +124,12 @@ function wireEvents() {
   startBtn.addEventListener("click", startNewTest);
   submitBtn.addEventListener("click", () => finalizeTest(false));
   jumpBtn.addEventListener("click", scrollToFirstUnanswered);
+
+  studyTopicFilter.addEventListener("change", renderStudyPageList);
+  resumeStudyBtn.addEventListener("click", resumeStudyPage);
+  studyPrevBtn.addEventListener("click", () => moveStudyPage(-1));
+  studyNextBtn.addEventListener("click", () => moveStudyPage(1));
+  studyCompleteBtn.addEventListener("click", markCurrentPageCompleted);
 }
 
 function switchAuthTab(tab) {
@@ -229,6 +260,10 @@ function showApp() {
 }
 
 function switchView(viewName) {
+  if (viewName !== "study") {
+    closeActiveStudyPage();
+  }
+
   const views = ["dashboard", "study", "practice", "mock", "profile"];
   views.forEach((name) => {
     const panel = document.getElementById(`view-${name}`);
@@ -241,6 +276,12 @@ function switchView(viewName) {
 
   if (viewName === "dashboard") {
     renderDashboard();
+  }
+
+  if (viewName === "study") {
+    ensureStudyData().then(() => {
+      renderStudyView();
+    });
   }
 
   if (viewName !== "mock") {
@@ -283,6 +324,7 @@ function renderDashboard() {
 }
 
 function logout() {
+  closeActiveStudyPage();
   setSession(null);
   clearInterval(appState.mock.timerId);
   resetMockState();
@@ -312,6 +354,14 @@ function removeUser(userId) {
   const nextResults = loadMockResults().filter((r) => r.userId !== userId);
   localStorage.setItem(STORAGE_KEYS.mockResults, JSON.stringify(nextResults));
 
+  const allProgress = loadJson(STORAGE_KEYS.studyProgress, {});
+  delete allProgress[userId];
+  localStorage.setItem(STORAGE_KEYS.studyProgress, JSON.stringify(allProgress));
+
+  const allPlan = loadJson(STORAGE_KEYS.studyPlan, {});
+  delete allPlan[userId];
+  localStorage.setItem(STORAGE_KEYS.studyPlan, JSON.stringify(allPlan));
+
   if (appState.currentUserId === userId) {
     setSession(null);
   }
@@ -323,9 +373,17 @@ function pruneExpiredUsers() {
   if (activeUsers.length !== appState.users.length) {
     const activeIds = new Set(activeUsers.map((u) => u.id));
     const keptResults = loadMockResults().filter((r) => activeIds.has(r.userId));
+    const keptProgress = Object.fromEntries(
+      Object.entries(loadJson(STORAGE_KEYS.studyProgress, {})).filter(([userId]) => activeIds.has(userId))
+    );
+    const keptPlan = Object.fromEntries(
+      Object.entries(loadJson(STORAGE_KEYS.studyPlan, {})).filter(([userId]) => activeIds.has(userId))
+    );
     appState.users = activeUsers;
     saveUsers();
     localStorage.setItem(STORAGE_KEYS.mockResults, JSON.stringify(keptResults));
+    localStorage.setItem(STORAGE_KEYS.studyProgress, JSON.stringify(keptProgress));
+    localStorage.setItem(STORAGE_KEYS.studyPlan, JSON.stringify(keptPlan));
   }
 }
 
@@ -351,6 +409,293 @@ function loadJson(key, fallback) {
   } catch {
     return fallback;
   }
+}
+
+async function ensureStudyData() {
+  if (appState.study.loaded) {
+    return;
+  }
+
+  const [studyResp, planResp] = await Promise.all([fetch(STUDY_CONTENT_PATH), fetch(STUDY_PLAN_PATH)]);
+  if (!studyResp.ok) {
+    throw new Error(`Could not load ${STUDY_CONTENT_PATH}`);
+  }
+  if (!planResp.ok) {
+    throw new Error(`Could not load ${STUDY_PLAN_PATH}`);
+  }
+
+  const studyData = await studyResp.json();
+  const planData = await planResp.json();
+
+  appState.study.topicNames = studyData.topic_names || {};
+  appState.study.pages = (studyData.pages || []).sort((a, b) => {
+    if (a.topic_code !== b.topic_code) {
+      return a.topic_code - b.topic_code;
+    }
+    return a.sequence_no - b.sequence_no;
+  });
+  appState.study.planItems = (planData.items || []).sort((a, b) => a.order_no - b.order_no);
+  appState.study.loaded = true;
+
+  initializeStudyFilter();
+}
+
+function initializeStudyFilter() {
+  if (studyTopicFilter.options.length > 0) {
+    return;
+  }
+
+  const allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.textContent = "All Topics";
+  studyTopicFilter.appendChild(allOption);
+
+  Object.entries(appState.study.topicNames).forEach(([code, name]) => {
+    const option = document.createElement("option");
+    option.value = String(code);
+    option.textContent = `Topic ${code}: ${name}`;
+    studyTopicFilter.appendChild(option);
+  });
+}
+
+function renderStudyView() {
+  renderStudyPlan();
+  renderStudyPageList();
+
+  const progress = getUserStudyProgress();
+  if (progress.lastPageId && appState.study.pages.some((p) => p.id === progress.lastPageId)) {
+    openStudyPage(progress.lastPageId, false);
+  }
+}
+
+function renderStudyPlan() {
+  const plan = getUserStudyPlan();
+  studyPlanList.innerHTML = "";
+
+  appState.study.planItems.forEach((item) => {
+    const row = document.createElement("label");
+    row.className = "study-plan-item";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = Boolean(plan[item.id]);
+    checkbox.addEventListener("change", () => {
+      const latest = getUserStudyPlan();
+      latest[item.id] = checkbox.checked;
+      setUserStudyPlan(latest);
+    });
+
+    const textWrap = document.createElement("span");
+    const weekText = item.week_no > 0 ? `Week ${item.week_no}` : "Prep";
+    textWrap.textContent = `${weekText}: ${item.title}`;
+
+    row.appendChild(checkbox);
+    row.appendChild(textWrap);
+    studyPlanList.appendChild(row);
+  });
+}
+
+function renderStudyPageList() {
+  const filter = studyTopicFilter.value || "all";
+  const progress = getUserStudyProgress();
+
+  const selectedPages = appState.study.pages.filter((page) => {
+    if (filter === "all") {
+      return true;
+    }
+    return String(page.topic_code) === filter;
+  });
+
+  studyPageList.innerHTML = "";
+  selectedPages.forEach((page) => {
+    const pageProgress = progress.pages[page.id] || {};
+    const status = pageProgress.completedAt ? "Completed" : pageProgress.visits ? "Visited" : "Not started";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "study-page-item";
+    button.addEventListener("click", () => openStudyPage(page.id, true));
+
+    button.innerHTML = `
+      <strong>Topic ${page.topic_code}.${page.sequence_no}: ${page.title}</strong>
+      <span>${status}</span>
+    `;
+
+    studyPageList.appendChild(button);
+  });
+
+  renderStudyTopicProgress(selectedPages, progress);
+}
+
+function renderStudyTopicProgress(selectedPages, progress) {
+  if (selectedPages.length === 0) {
+    studyTopicProgress.textContent = "No pages for selected topic.";
+    return;
+  }
+
+  const completed = selectedPages.filter((page) => progress.pages[page.id]?.completedAt).length;
+  const pct = Math.round((completed / selectedPages.length) * 100);
+  studyTopicProgress.textContent = `${completed}/${selectedPages.length} pages completed (${pct}%).`;
+}
+
+function openStudyPage(pageId, fromUserAction) {
+  closeActiveStudyPage();
+
+  const page = appState.study.pages.find((p) => p.id === pageId);
+  if (!page) {
+    return;
+  }
+
+  appState.study.currentPageId = pageId;
+  appState.study.pageStartedAt = Date.now();
+
+  const progress = getUserStudyProgress();
+  const entry = progress.pages[pageId] || { visits: 0, timeSpentSeconds: 0 };
+  entry.visits = (entry.visits || 0) + 1;
+  entry.lastViewedAt = Date.now();
+  progress.pages[pageId] = entry;
+  progress.lastPageId = pageId;
+  setUserStudyProgress(progress);
+
+  studyReader.classList.remove("hidden");
+  studyPageTitle.textContent = page.title;
+  studyPageMeta.textContent = `Topic ${page.topic_code}.${page.sequence_no} | Source: ${page.source_file}`;
+
+  studyPageContent.innerHTML = "";
+  (page.content_blocks || []).forEach((block) => {
+    if (block.type === "bullet") {
+      const li = document.createElement("li");
+      li.textContent = block.text;
+
+      let list = studyPageContent.querySelector("ul");
+      if (!list) {
+        list = document.createElement("ul");
+        studyPageContent.appendChild(list);
+      }
+      list.appendChild(li);
+      return;
+    }
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent = block.text;
+    studyPageContent.appendChild(paragraph);
+  });
+
+  updateStudyReaderButtons();
+  if (fromUserAction) {
+    studyReader.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  renderStudyPageList();
+}
+
+function updateStudyReaderButtons() {
+  const index = appState.study.pages.findIndex((page) => page.id === appState.study.currentPageId);
+  studyPrevBtn.disabled = index <= 0;
+  studyNextBtn.disabled = index < 0 || index >= appState.study.pages.length - 1;
+
+  const progress = getUserStudyProgress();
+  const isCompleted = Boolean(progress.pages[appState.study.currentPageId]?.completedAt);
+  studyCompleteBtn.textContent = isCompleted ? "Completed" : "Mark as Completed";
+  studyCompleteBtn.disabled = isCompleted;
+}
+
+function moveStudyPage(delta) {
+  const index = appState.study.pages.findIndex((page) => page.id === appState.study.currentPageId);
+  if (index < 0) {
+    return;
+  }
+  const nextIndex = index + delta;
+  if (nextIndex < 0 || nextIndex >= appState.study.pages.length) {
+    return;
+  }
+
+  openStudyPage(appState.study.pages[nextIndex].id, true);
+}
+
+function markCurrentPageCompleted() {
+  if (!appState.study.currentPageId) {
+    return;
+  }
+
+  const progress = getUserStudyProgress();
+  const entry = progress.pages[appState.study.currentPageId] || { visits: 0, timeSpentSeconds: 0 };
+  entry.completedAt = Date.now();
+  progress.pages[appState.study.currentPageId] = entry;
+  setUserStudyProgress(progress);
+
+  updateStudyReaderButtons();
+  renderStudyPageList();
+}
+
+function resumeStudyPage() {
+  const progress = getUserStudyProgress();
+  if (progress.lastPageId) {
+    openStudyPage(progress.lastPageId, true);
+    return;
+  }
+
+  if (appState.study.pages.length > 0) {
+    openStudyPage(appState.study.pages[0].id, true);
+  }
+}
+
+function closeActiveStudyPage() {
+  if (!appState.study.currentPageId || !appState.study.pageStartedAt) {
+    return;
+  }
+
+  const elapsed = Math.max(1, Math.round((Date.now() - appState.study.pageStartedAt) / 1000));
+  const progress = getUserStudyProgress();
+  const entry = progress.pages[appState.study.currentPageId] || { visits: 0, timeSpentSeconds: 0 };
+  entry.timeSpentSeconds = (entry.timeSpentSeconds || 0) + elapsed;
+  entry.lastViewedAt = Date.now();
+  progress.pages[appState.study.currentPageId] = entry;
+  setUserStudyProgress(progress);
+
+  appState.study.pageStartedAt = null;
+}
+
+function getUserStudyProgress() {
+  const user = findCurrentUser();
+  if (!user) {
+    return { pages: {}, lastPageId: null };
+  }
+
+  const all = loadJson(STORAGE_KEYS.studyProgress, {});
+  return all[user.id] || { pages: {}, lastPageId: null };
+}
+
+function setUserStudyProgress(progress) {
+  const user = findCurrentUser();
+  if (!user) {
+    return;
+  }
+
+  const all = loadJson(STORAGE_KEYS.studyProgress, {});
+  all[user.id] = progress;
+  localStorage.setItem(STORAGE_KEYS.studyProgress, JSON.stringify(all));
+}
+
+function getUserStudyPlan() {
+  const user = findCurrentUser();
+  if (!user) {
+    return {};
+  }
+
+  const all = loadJson(STORAGE_KEYS.studyPlan, {});
+  return all[user.id] || {};
+}
+
+function setUserStudyPlan(planState) {
+  const user = findCurrentUser();
+  if (!user) {
+    return;
+  }
+
+  const all = loadJson(STORAGE_KEYS.studyPlan, {});
+  all[user.id] = planState;
+  localStorage.setItem(STORAGE_KEYS.studyPlan, JSON.stringify(all));
 }
 
 async function startNewTest() {

@@ -1,0 +1,207 @@
+{
+  "items": [
+    {
+      "id": "plan_1",
+      "week_no": 1,
+      "order_no": 1,
+      "title": "Week 1 - Study",
+      "description": "Focus area: Study"
+    },
+    {
+      "id": "plan_2",
+      "week_no": 1,
+      "order_no": 2,
+      "title": "Start by studying the topics on the right. Remember to tick the boxes once completed, so you can keep track of your progress.",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_3",
+      "week_no": 1,
+      "order_no": 3,
+      "title": "1. The values and principles of the UK",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_4",
+      "week_no": 1,
+      "order_no": 4,
+      "title": "2. What is the UK?",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_5",
+      "week_no": 1,
+      "order_no": 5,
+      "title": "3. A long and illustrious history",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_6",
+      "week_no": 2,
+      "order_no": 6,
+      "title": "Week 2 - Practice",
+      "description": "Focus area: Practice"
+    },
+    {
+      "id": "plan_7",
+      "week_no": 2,
+      "order_no": 7,
+      "title": "Once you have read and understood the content, navigate to the practice section and practice these topics.",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_8",
+      "week_no": 3,
+      "order_no": 8,
+      "title": "Week 3 - Study",
+      "description": "Focus area: Study"
+    },
+    {
+      "id": "plan_9",
+      "week_no": 3,
+      "order_no": 9,
+      "title": "1. A modern, thriving society",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_10",
+      "week_no": 3,
+      "order_no": 10,
+      "title": "2. The UK government, the law and your role",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_11",
+      "week_no": 4,
+      "order_no": 11,
+      "title": "Week 4 - Practice",
+      "description": "Focus area: Practice"
+    },
+    {
+      "id": "plan_13",
+      "week_no": 5,
+      "order_no": 13,
+      "title": "Week 5 - Study",
+      "description": "Focus area: Study"
+    },
+    {
+      "id": "plan_14",
+      "week_no": 5,
+      "order_no": 14,
+      "title": "1. A read through of all study content",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_15",
+      "week_no": 5,
+      "order_no": 15,
+      "title": "2. Glossary",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_16",
+      "week_no": 6,
+      "order_no": 16,
+      "title": "Week 6 - Mock Test",
+      "description": "Focus area: Mock Test"
+    },
+    {
+      "id": "plan_17",
+      "week_no": 7,
+      "order_no": 17,
+      "title": "Week 7 - Study",
+      "description": "Focus area: Study"
+    },
+    {
+      "id": "plan_21",
+      "week_no": 8,
+      "order_no": 21,
+      "title": "Week 8 - Practice",
+      "description": "Focus area: Practice"
+    },
+    {
+      "id": "plan_22",
+      "week_no": 8,
+      "order_no": 22,
+      "title": "Once you have read and understood the content, navigate to the practice section and practice these topics again.",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_23",
+      "week_no": 9,
+      "order_no": 23,
+      "title": "Week 9 - Study",
+      "description": "Focus area: Study"
+    },
+    {
+      "id": "plan_26",
+      "week_no": 10,
+      "order_no": 26,
+      "title": "Week 10 - Practice",
+      "description": "Focus area: Practice"
+    },
+    {
+      "id": "plan_28",
+      "week_no": 11,
+      "order_no": 28,
+      "title": "Week 11 - Study",
+      "description": "Focus area: Study"
+    },
+    {
+      "id": "plan_31",
+      "week_no": 12,
+      "order_no": 31,
+      "title": "Week 12 - Mock Test",
+      "description": "Focus area: Mock Test"
+    },
+    {
+      "id": "plan_32",
+      "week_no": 12,
+      "order_no": 32,
+      "title": "Once you are confident you have enough knowledge and understanding of Life in the UK, you may wish to consider booking your test",
+      "description": "Weekly study action"
+    },
+    {
+      "id": "plan_33",
+      "week_no": 0,
+      "order_no": 33,
+      "title": "Finding a quiet place to work",
+      "description": "Preparation habit"
+    },
+    {
+      "id": "plan_34",
+      "week_no": 0,
+      "order_no": 34,
+      "title": "Taking notes",
+      "description": "Preparation habit"
+    },
+    {
+      "id": "plan_35",
+      "week_no": 0,
+      "order_no": 35,
+      "title": "Creating a revision timetable",
+      "description": "Preparation habit"
+    },
+    {
+      "id": "plan_36",
+      "week_no": 0,
+      "order_no": 36,
+      "title": "Testing your knowledge on each topic",
+      "description": "Preparation habit"
+    },
+    {
+      "id": "plan_37",
+      "week_no": 0,
+      "order_no": 37,
+      "title": "This section is based on the official ‘Life in the United Kingdom: A Guide for New Residents’ handbook",
+      "description": "Preparation habit"
+    },
+    {
+      "id": "plan_38",
+      "week_no": 0,
+      "order_no": 38,
+      "title": "The ‘check that you understand’ boxes are for guidance. They will help you identify areas that you need to understand for the test. However, just knowing the information highlighted in these boxes will not be enough to pass. You need to make sure that you understand everything in the study section, so please take your time and read the content carefully.",
+      "description": "Preparation habit"
+    }
+  ]
+}
