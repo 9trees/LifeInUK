@@ -3,29 +3,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from content.models import StudyPage, StudyPlanItem, Topic
+from content.models import StudyPage, Topic
 
 from .models import UserStudyProgress
 
 
 @login_required
 def study_plan_view(request):
-    items = StudyPlanItem.objects.all()
-    done = set(request.session.get("study_plan_done", []))
-    rows = [{"item": item, "done": item.id in done} for item in items]
-    return render(request, "study/plan.html", {"rows": rows})
-
-
-@require_POST
-@login_required
-def toggle_plan_item(request, item_id):
-    done = set(request.session.get("study_plan_done", []))
-    if item_id in done:
-        done.discard(item_id)
-    else:
-        done.add(item_id)
-    request.session["study_plan_done"] = list(done)
-    return redirect("study:plan")
+    return render(request, "study/plan.html", {})
 
 
 @login_required

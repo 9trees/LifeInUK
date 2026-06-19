@@ -1,22 +1,112 @@
 {% extends "base.html" %}
 {% block title %}Study Plan{% endblock %}
 {% block content %}
-<h2 class="mb-3">Study Plan</h2>
-<p class="text-muted">Follow the weekly milestones and tick items as you complete them.</p>
-<div class="card shadow-sm">
-  <ul class="list-group list-group-flush">
-    {% for row in rows %}
-    <li class="list-group-item d-flex align-items-center">
-      <form method="post" action="{% url 'study:toggle_plan' row.item.id %}" class="me-2">
-        {% csrf_token %}
-        <input type="checkbox" class="form-check-input" onchange="this.form.submit()" {% if row.done %}checked{% endif %}>
-      </form>
-      <span>
-        <span class="badge bg-secondary me-2">{% if row.item.week_no %}Week {{ row.item.week_no }}{% else %}Prep{% endif %}</span>
-        {{ row.item.title }}
-      </span>
-    </li>
-    {% endfor %}
-  </ul>
+
+<h2 class="mb-1">Example Life in the UK Study Plan</h2>
+<p class="text-muted mb-4">Preparing to study for the Life in the UK test</p>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <p>The exact amount of time you take to complete your learning will depend on several factors, including familiarity with the history, values and principles of the UK, and the time you have available to study.</p>
+    <p class="mb-1"><strong>Remember — good study habits mean:</strong></p>
+    <ul>
+      <li>Finding a quiet place to work</li>
+      <li>Taking notes</li>
+      <li>Creating a revision timetable</li>
+      <li>Testing your knowledge on each topic</li>
+    </ul>
+    <div class="alert alert-info mb-0 py-2">
+      <strong>Top tip:</strong> The platform automatically keeps track of your progress to help with your study plan!
+    </div>
+  </div>
 </div>
+
+<h4 class="mb-3">About the Platform</h4>
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card h-100 border-primary">
+      <div class="card-header bg-primary text-white fw-bold">Section 1 — Study</div>
+      <div class="card-body">
+        <p class="mb-2">This section is based on the official <em>'Life in the United Kingdom: A Guide for New Residents'</em> handbook.</p>
+        <ul class="mb-0 small">
+          <li>The values and principles of the UK</li>
+          <li>Becoming a permanent resident</li>
+          <li>Taking the Life in the UK test</li>
+          <li>Early Britain</li>
+          <li>The Middle Ages</li>
+          <li>The Tudors and Stuarts</li>
+          <li>A global power</li>
+          <li>The 20th century</li>
+          <li>Britain since 1945</li>
+          <li>The UK today</li>
+          <li>Religion</li>
+          <li>Customs and traditions</li>
+          <li>Sport, Arts and culture, Leisure</li>
+          <li>The development of British democracy</li>
+          <li>The British constitution</li>
+          <li>The government</li>
+          <li>The UK and international institutions</li>
+          <li>Respecting the law</li>
+          <li>Fundamental principles</li>
+          <li>Your role in the community</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 border-success">
+      <div class="card-header bg-success text-white fw-bold">Section 2 — Practice</div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Answer practice questions based on the topics you have studied.</li>
+          <li>Tests your knowledge and understanding of the content.</li>
+          <li>When you complete a set of questions it may highlight topics you need to spend more time revising.</li>
+          <li>Adjust your revision timetable based on the feedback you receive.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card h-100 border-warning">
+      <div class="card-header bg-warning fw-bold">Section 3 — Mock Test</div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Mirrors the examination experience — same number of questions and time limit.</li>
+          <li><strong>Note:</strong> this section does <em>not</em> contain the official questions. They are mock questions based on the style and structure of the real test.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h4 class="mb-3">Proposed 12-Week Schedule</h4>
+<p class="text-muted">This is an advised plan for a 3-month subscription. Adapt according to your subscription and prior knowledge.</p>
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
+    <thead class="table-dark">
+      <tr><th>Week</th><th>Activity</th><th>Topics / Actions</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Week 1</strong></td><td><span class="badge bg-primary">Study</span></td><td>The values and principles of the UK &nbsp;·&nbsp; What is the UK? &nbsp;·&nbsp; A long and illustrious history</td></tr>
+      <tr><td><strong>Week 2</strong></td><td><span class="badge bg-success">Practice</span></td><td>Practice questions on Week 1 topics.</td></tr>
+      <tr><td><strong>Week 3</strong></td><td><span class="badge bg-primary">Study</span></td><td>A modern, thriving society &nbsp;·&nbsp; The UK government, the law and your role</td></tr>
+      <tr><td><strong>Week 4</strong></td><td><span class="badge bg-success">Practice</span></td><td>Practice questions on Week 3 topics.</td></tr>
+      <tr><td><strong>Week 5</strong></td><td><span class="badge bg-primary">Study</span></td><td>Read through all study content &nbsp;·&nbsp; Review the glossary</td></tr>
+      <tr><td><strong>Week 6</strong></td><td><span class="badge bg-warning text-dark">Mock Test</span></td><td>Take a full 45-minute mock test. Review weak areas.</td></tr>
+      <tr><td><strong>Week 7</strong></td><td><span class="badge bg-primary">Study</span></td><td>Revisit topics where you scored lowest in the mock test.</td></tr>
+      <tr><td><strong>Week 8</strong></td><td><span class="badge bg-success">Practice</span></td><td>Practice those topics again using all-unanswered mode.</td></tr>
+      <tr><td><strong>Week 9</strong></td><td><span class="badge bg-primary">Study</span></td><td>Final read-through of all study content.</td></tr>
+      <tr><td><strong>Week 10</strong></td><td><span class="badge bg-success">Practice</span></td><td>Full mixed-topic practice (all questions).</td></tr>
+      <tr><td><strong>Week 11</strong></td><td><span class="badge bg-primary">Study</span></td><td>Targeted revision based on Practice results.</td></tr>
+      <tr><td><strong>Week 12</strong></td><td><span class="badge bg-warning text-dark">Mock Test</span></td><td>Final mock test. When confident, consider booking the real test.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="d-flex gap-2 mt-3">
+  <a class="btn btn-primary" href="{% url 'study:index' %}">Start Studying</a>
+  <a class="btn btn-success" href="{% url 'practice:setup' %}">Go to Practice</a>
+  <a class="btn btn-warning" href="{% url 'mocktest:start' %}">Take a Mock Test</a>
+</div>
+
 {% endblock %}

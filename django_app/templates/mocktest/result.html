@@ -1,26 +1,91 @@
 {% extends "base.html" %}
 {% block title %}Mock Result{% endblock %}
 {% block content %}
+
 <h2 class="mb-3">Mock Test Result</h2>
-<div class="card shadow-sm mb-3">
+
+{# Score card #}
+<div class="card shadow-sm mb-4">
   <div class="card-body">
-    <p class="fs-4 mb-1"><strong>{{ session.correct_answers }}</strong> / {{ session.total_questions }} ({{ session.score_percent }}%)</p>
-    <span class="badge {% if session.pass_status %}bg-success{% else %}bg-danger{% endif %} fs-6">
-      {% if session.pass_status %}PASS{% else %}FAIL{% endif %}
-    </span>
-    <p class="text-muted mt-2 mb-0">Time taken: {{ session.duration_seconds }}s</p>
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <p class="display-6 fw-bold mb-1">{{ session.correct_answers }}<span class="fs-4 text-muted">/{{ session.total_questions }}</span></p>
+        <p class="mb-0 text-muted">{{ session.score_percent }}% — {{ session.duration_seconds|floatformat:0 }}s</p>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <span class="badge fs-4 px-4 py-2 {% if session.pass_status %}bg-success{% else %}bg-danger{% endif %}">
+          {% if session.pass_status %}PASS{% else %}FAIL{% endif %}
+        </span>
+        <p class="text-muted small mt-1 mb-0">Pass mark: {{ pass_mark }}/{{ session.total_questions }}</p>
+      </div>
+    </div>
   </div>
 </div>
 
-<h4>Performance by Topic</h4>
-<div class="card shadow-sm mb-3">
-  <ul class="list-group list-group-flush">
-    {% for name, stats in topic_stats.items %}
-    <li class="list-group-item d-flex justify-content-between"><span>{{ name }}</span><span>{{ stats.correct }}/{{ stats.total }}</span></li>
-    {% endfor %}
-  </ul>
+{# Per-topic breakdown #}
+<div class="card shadow-sm mb-4">
+  <div class="card-header fw-semibold">Performance by Topic</div>
+  <div class="card-body p-0">
+    <table class="table table-sm mb-0">
+      <thead class="table-light"><tr><th>Topic</th><th class="text-end">Score</th><th class="text-end">%</th></tr></thead>
+      <tbody>
+        {% for name, stats in topic_stats.items %}
+        <tr>
+          <td>{{ name }}</td>
+          <td class="text-end">{{ stats.correct }}/{{ stats.total }}</td>
+          <td class="text-end">{% if stats.total %}{{ stats.correct|floatformat:0 }}{% endif %}{% widthratio stats.correct stats.total 100 %}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<a class="btn btn-primary" href="{% url 'mocktest:start' %}">New Mock Test</a>
-<a class="btn btn-outline-secondary" href="{% url 'analytics:dashboard' %}">Dashboard</a>
+{# Question-by-question review #}
+<h4 class="mb-3">Review All Questions</h4>
+{% for item in review %}
+<div class="card mb-3 {% if item.is_correct %}border-success{% else %}border-danger{% endif %} shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center py-2">
+    <span>
+      <span class="fw-bold">Q{{ item.order }}</span>
+      <span class="text-muted small ms-2">{{ item.question.topic.name }}</span>
+    </span>
+    <span class="d-flex gap-2 align-items-center">
+      {% if item.flagged %}<span class="badge bg-warning text-dark">🚩 Flagged</span>{% endif %}
+      {% if item.is_correct %}
+        <span class="badge bg-success">Correct</span>
+      {% else %}
+        <span class="badge bg-danger">Incorrect</span>
+      {% endif %}
+    </span>
+  </div>
+  <div class="card-body">
+    <p class="fw-semibold mb-3">{{ item.question.text }}</p>
+    {% for opt in item.options %}
+    <div class="d-flex align-items-start gap-2 border rounded p-2 mb-2
+      {% if opt.is_correct %}border-success bg-success bg-opacity-10
+      {% elif item.selected and item.selected.id == opt.id and not opt.is_correct %}border-danger bg-danger bg-opacity-10
+      {% endif %}">
+      <span class="fw-bold me-1">
+        {% if opt.is_correct %}✓{% elif item.selected and item.selected.id == opt.id %}✗{% else %}&nbsp;{% endif %}
+      </span>
+      <span>{{ opt.text }}
+        {% if opt.is_correct %}<span class="text-success small ms-2">correct answer</span>{% endif %}
+        {% if item.selected and item.selected.id == opt.id and not opt.is_correct %}<span class="text-danger small ms-2">your answer</span>{% endif %}
+      </span>
+    </div>
+    {% endfor %}
+    {% if item.question.explanation %}
+    <div class="alert alert-secondary mt-3 mb-0 py-2">
+      <strong>Explanation:</strong> {{ item.question.explanation }}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+
+<div class="d-flex gap-2 mt-3">
+  <a class="btn btn-primary" href="{% url 'mocktest:start' %}">New Mock Test</a>
+  <a class="btn btn-outline-secondary" href="{% url 'analytics:dashboard' %}">Dashboard</a>
+</div>
 {% endblock %}

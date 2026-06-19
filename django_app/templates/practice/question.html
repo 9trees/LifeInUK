@@ -1,61 +1,85 @@
 {% extends "base.html" %}
 {% block title %}Practice Question{% endblock %}
 {% block content %}
+
 <div class="d-flex justify-content-between align-items-center mb-2">
   <h4 class="mb-0">Question {{ index|add:1 }} of {{ total }}</h4>
-  <span class="text-muted">{{ question.topic.name }}</span>
+  <span class="text-muted small">{{ question.topic.name }}</span>
 </div>
 <div class="progress mb-3" style="height:6px;">
-  <div class="progress-bar" style="width: {% widthratio index|add:1 total 100 %}%"></div>
+  <div class="progress-bar" style="width:{% widthratio index|add:1 total 100 %}%"></div>
 </div>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm mb-3">
   <div class="card-body">
-    <p class="fs-5">{{ question.text }}</p>
+    <p class="fs-5 mb-3">{{ question.text }}</p>
 
     <form method="post" action="{% url 'practice:answer' session.id index %}" id="answer-form">
       {% csrf_token %}
       <input type="hidden" name="elapsed_ms" id="elapsed_ms" value="0">
+
       {% for opt in options %}
-      <label class="list-group-item option-label d-block mb-2 border rounded p-2
-        {% if response %}{% if opt.is_correct %}correct{% elif response.selected_option_id == opt.id %}wrong{% endif %}{% endif %}">
-        <input class="form-check-input me-2" type="radio" name="option" value="{{ opt.id }}"
+      <label class="d-flex align-items-start gap-2 border rounded p-3 mb-2 option-label
+        {% if response %}{% if opt.is_correct %} correct{% elif response.selected_option_id == opt.id %} wrong{% endif %}{% endif %}"
+        style="cursor:{% if response %}default{% else %}pointer{% endif %}">
+        <input class="form-check-input mt-1 flex-shrink-0" type="radio" name="option" value="{{ opt.id }}"
           {% if response %}disabled{% endif %}
           {% if response.selected_option_id == opt.id %}checked{% endif %}>
-        {{ opt.text }}
+        <span>{{ opt.text }}</span>
       </label>
       {% endfor %}
 
       {% if not response %}
-      <button class="btn btn-primary mt-2">Submit Answer</button>
+      {# Explanation toggle — helps user think before committing #}
+      <div class="d-flex gap-2 mt-3 flex-wrap">
+        <button type="button" class="btn btn-outline-secondary" id="show-expl-btn" onclick="toggleExplanation()">Show Explanation</button>
+        <button type="submit" class="btn btn-primary">Submit Answer</button>
+      </div>
       {% endif %}
     </form>
 
-    {% if response %}
-    <div class="alert {% if response.is_correct %}alert-success{% else %}alert-danger{% endif %} mt-3">
-      <strong>{% if response.is_correct %}Correct!{% else %}Not quite.{% endif %}</strong>
+    {# Explanation block — shown inline if user requests it before answering, or automatically after answering #}
+    <div id="explanation-block" class="alert mt-3
+      {% if response %}{% if response.is_correct %}alert-success{% else %}alert-danger{% endif %}{% else %}alert-secondary d-none{% endif %}">
+      {% if response %}
+        <strong>{% if response.is_correct %}Correct!{% else %}Incorrect.{% endif %}</strong>
+      {% else %}
+        <strong>Explanation:</strong>
+      {% endif %}
       <div class="mt-1">{{ question.explanation|default:"No explanation available." }}</div>
     </div>
-    {% endif %}
-
-    <div class="d-flex justify-content-between mt-3">
-      {% if has_prev %}<a class="btn btn-outline-secondary" href="{% url 'practice:question' session.id index|add:'-1' %}">&larr; Previous</a>{% else %}<span></span>{% endif %}
-      {% if has_next %}
-        <a class="btn btn-primary" href="{% url 'practice:question' session.id index|add:1 %}">Next &rarr;</a>
-      {% else %}
-        <a class="btn btn-success" href="{% url 'practice:result' session.id %}">Finish</a>
-      {% endif %}
-    </div>
   </div>
+</div>
+
+<div class="d-flex justify-content-between">
+  {% if has_prev %}
+    <a class="btn btn-outline-secondary" href="{% url 'practice:question' session.id index|add:'-1' %}">&larr; Previous</a>
+  {% else %}<span></span>{% endif %}
+
+  {% if response %}
+    {% if has_next %}
+      <a class="btn btn-primary" href="{% url 'practice:question' session.id index|add:1 %}">Next &rarr;</a>
+    {% else %}
+      <a class="btn btn-success" href="{% url 'practice:result' session.id %}">Finish &rarr;</a>
+    {% endif %}
+  {% endif %}
 </div>
 
 <script>
   const start = Date.now();
   const form = document.getElementById('answer-form');
-  if (form) {
-    form.addEventListener('submit', () => {
-      document.getElementById('elapsed_ms').value = Date.now() - start;
-    });
+  if (form) form.addEventListener('submit', () => { document.getElementById('elapsed_ms').value = Date.now() - start; });
+
+  function toggleExplanation() {
+    const block = document.getElementById('explanation-block');
+    const btn = document.getElementById('show-expl-btn');
+    if (block.classList.contains('d-none')) {
+      block.classList.remove('d-none');
+      btn.textContent = 'Hide Explanation';
+    } else {
+      block.classList.add('d-none');
+      btn.textContent = 'Show Explanation';
+    }
   }
 </script>
 {% endblock %}

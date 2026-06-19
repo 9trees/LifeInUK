@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Mock Test — How It Works{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <h2 class="mb-1">Mock Test</h2>
+    <p class="text-muted mb-4">Read the instructions below before you start.</p>
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">How it works</h5>
+        <div class="row g-3">
+          <div class="col-md-4 text-center">
+            <div class="display-6 mb-2">24</div>
+            <p class="mb-0 text-muted">Questions, selected by the official blueprint</p>
+          </div>
+          <div class="col-md-4 text-center">
+            <div class="display-6 mb-2">{{ duration }} min</div>
+            <p class="mb-0 text-muted">Time limit — test auto-submits at zero</p>
+          </div>
+          <div class="col-md-4 text-center">
+            <div class="display-6 mb-2">18 / 24</div>
+            <p class="mb-0 text-muted">Pass mark (75%)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5>What to expect</h5>
+        <ul class="mb-0">
+          <li>Questions are shown <strong>one at a time</strong> — you navigate freely with Previous / Next.</li>
+          <li>A <strong>progress bar</strong> and answered count are always visible.</li>
+          <li>Use the <strong>🚩 Flag</strong> button to mark any question you want to revisit.</li>
+          <li>The <strong>question index</strong> on the right lets you jump to any question directly.</li>
+          <li>You can change your answer at any time before submitting.</li>
+          <li>Click <strong>Submit Test</strong> when done — or it submits automatically when time runs out.</li>
+          <li>After submitting you can <strong>review all questions</strong> with the correct answer and explanation.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5>Blueprint</h5>
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr><th>Topic</th><th class="text-end">Questions</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>The values and principles of the UK</td><td class="text-end">1</td></tr>
+            <tr><td>What is the UK?</td><td class="text-end">1</td></tr>
+            <tr><td>A long and illustrious history</td><td class="text-end">8</td></tr>
+            <tr><td>A modern, thriving society</td><td class="text-end">7</td></tr>
+            <tr><td>The UK government, the law and your role</td><td class="text-end">7</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <form method="post" action="{% url 'mocktest:begin' %}">
+      {% csrf_token %}
+      <button class="btn btn-primary btn-lg px-5">Start Test</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

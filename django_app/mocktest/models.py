@@ -24,9 +24,11 @@ class MockTestResponse(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     selected_option = models.ForeignKey(AnswerOption, on_delete=models.SET_NULL, null=True, blank=True)
     is_correct = models.BooleanField(default=False)
+    flagged = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("mock_session", "question")
+        indexes = [models.Index(fields=["mock_session", "question"])]
 
 
 class MockTestQuestionEvent(models.Model):
