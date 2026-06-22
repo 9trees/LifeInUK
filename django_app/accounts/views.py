@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import ChangePasswordForm, LoginForm, RegisterForm
 
@@ -36,6 +37,7 @@ def login_view(request):
     return render(request, "accounts/login.html", {"form": form})
 
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect("accounts:login")

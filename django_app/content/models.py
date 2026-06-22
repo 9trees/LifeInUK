@@ -21,7 +21,9 @@ class StudyPage(models.Model):
 
     class Meta:
         ordering = ["topic__code", "sequence_no"]
-        unique_together = ("topic", "sequence_no")
+        constraints = [
+            models.UniqueConstraint(fields=["topic", "sequence_no"], name="unique_study_page"),
+        ]
 
     @property
     def slug(self):

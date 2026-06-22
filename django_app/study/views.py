@@ -1,4 +1,5 @@
 from django.contrib.auth.decorators import login_required
+from django.db import models
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -57,10 +58,18 @@ def study_page_view(request, slug):
         progress.status = UserStudyProgress.IN_PROGRESS
     progress.save()
 
-    siblings = list(StudyPage.objects.all())
-    index = next((i for i, p in enumerate(siblings) if p.id == page.id), 0)
-    prev_page = siblings[index - 1] if index > 0 else None
-    next_page = siblings[index + 1] if index < len(siblings) - 1 else None
+    prev_page = (
+        StudyPage.objects.filter(
+            models.Q(topic__code__lt=page.topic.code)
+            | models.Q(topic__code=page.topic.code, sequence_no__lt=page.sequence_no)
+        ).order_by("-topic__code", "-sequence_no").first()
+    )
+    next_page = (
+        StudyPage.objects.filter(
+            models.Q(topic__code__gt=page.topic.code)
+            | models.Q(topic__code=page.topic.code, sequence_no__gt=page.sequence_no)
+        ).order_by("topic__code", "sequence_no").first()
+    )
 
     return render(request, "study/page.html", {
         "page": page,

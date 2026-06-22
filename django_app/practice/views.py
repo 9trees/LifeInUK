@@ -104,10 +104,13 @@ def practice_result(request, session_id):
 
     correct = sum(1 for r in responses if r.is_correct)
     total = session.total_questions
-    session.correct_answers = correct
-    session.score_percent = round((correct / total) * 100) if total else 0
-    session.ended_at = timezone.now()
-    session.save()
+
+    # Only finalise the session once (first visit after completing practice)
+    if session.ended_at is None:
+        session.correct_answers = correct
+        session.score_percent = round((correct / total) * 100) if total else 0
+        session.ended_at = timezone.now()
+        session.save()
 
     topic_stats = {}
     for r in responses:

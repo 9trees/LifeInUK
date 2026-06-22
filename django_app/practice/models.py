@@ -27,8 +27,21 @@ class AnswerOption(models.Model):
 
 
 class PracticeSession(models.Model):
+    MODE_RANDOM_10 = "random_10"
+    MODE_RANDOM_20 = "random_20"
+    MODE_RANDOM_30 = "random_30"
+    MODE_UNANSWERED = "unanswered"
+    MODE_ALL = "all"
+    MODE_CHOICES = [
+        (MODE_RANDOM_10, "Random 10"),
+        (MODE_RANDOM_20, "Random 20"),
+        (MODE_RANDOM_30, "Random 30"),
+        (MODE_UNANSWERED, "Unanswered"),
+        (MODE_ALL, "All"),
+    ]
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="practice_sessions")
-    mode = models.CharField(max_length=20)
+    mode = models.CharField(max_length=20, choices=MODE_CHOICES)
     selected_topics = models.JSONField(default=list)
     question_ids = models.JSONField(default=list)
     started_at = models.DateTimeField(auto_now_add=True)
@@ -51,5 +64,6 @@ class PracticeResponse(models.Model):
     answered_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("session", "question")
-        indexes = [models.Index(fields=["session", "question"])]
+        constraints = [
+            models.UniqueConstraint(fields=["session", "question"], name="unique_practice_response"),
+        ]

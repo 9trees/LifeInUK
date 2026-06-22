@@ -23,8 +23,9 @@ class UserStudyProgress(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        unique_together = ("user", "study_page")
-        indexes = [models.Index(fields=["user", "study_page"])]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "study_page"], name="unique_user_study_progress"),
+        ]
 
     def __str__(self):
         return f"{self.user} - {self.study_page.slug} ({self.status})"

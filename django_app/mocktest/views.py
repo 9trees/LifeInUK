@@ -1,10 +1,10 @@
 import random
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from content.models import Topic
@@ -14,12 +14,13 @@ from .models import MockTestQuestionEvent, MockTestResponse, MockTestSession
 
 PASS_MARK = 18
 DURATION_SECONDS = 45 * 60
+# topic_code → number of questions to sample
 BLUEPRINT = {
-    "The values and principles of the UK": 1,
-    "What is the UK?": 1,
-    "A long and illustrious history": 8,
-    "A modern, thriving society": 7,
-    "The UK government, the law and your role": 7,
+    1: 1,  # The values and principles of the UK
+    2: 1,  # What is the UK?
+    3: 8,  # A long and illustrious history
+    4: 7,  # A modern, thriving society
+    5: 7,  # The UK government, the law and your role
 }
 
 
@@ -33,18 +34,18 @@ def mock_intro(request):
 def mock_start(request):
     """Generate a blueprint-based mock session and redirect to first question."""
     selected = []
-    for topic_name, count in BLUEPRINT.items():
-        topic = Topic.objects.filter(name=topic_name).first()
+    for topic_code, count in BLUEPRINT.items():
+        topic = Topic.objects.filter(code=topic_code).first()
         if not topic:
             return render(request, "mocktest/intro.html", {
                 "pass_mark": PASS_MARK, "duration": DURATION_SECONDS // 60,
-                "error": f"Questions not yet imported for topic '{topic_name}'. Run import_questions."
+                "error": f"Questions not yet imported for topic code {topic_code}. Run import_questions."
             })
         pool = list(Question.objects.filter(topic=topic).values_list("id", flat=True))
         if len(pool) < count:
             return render(request, "mocktest/intro.html", {
                 "pass_mark": PASS_MARK, "duration": DURATION_SECONDS // 60,
-                "error": f"Not enough questions for '{topic_name}'."
+                "error": f"Not enough questions for '{topic.name}'."
             })
         selected.extend(random.sample(pool, count))
 
@@ -122,7 +123,7 @@ def mock_save_answer(request, session_id, index):
 
     if old_option and old_option != (selected.id if selected else None):
         MockTestQuestionEvent.objects.filter(mock_session=session, question=question).update(
-            answer_changed_count=models_F("answer_changed_count") + 1
+            answer_changed_count=F("answer_changed_count") + 1
         )
 
     answered_count = MockTestResponse.objects.filter(mock_session=session, selected_option__isnull=False).count()
@@ -218,9 +219,3 @@ def mock_result(request, session_id):
         "incorrect_answers": incorrect_answers,
     })
 
-
-# models_F import fix
-try:
-    from django.db.models import F as models_F
-except ImportError:
-    models_F = None

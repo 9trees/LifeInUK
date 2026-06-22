@@ -27,8 +27,9 @@ class MockTestResponse(models.Model):
     flagged = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = ("mock_session", "question")
-        indexes = [models.Index(fields=["mock_session", "question"])]
+        constraints = [
+            models.UniqueConstraint(fields=["mock_session", "question"], name="unique_mock_response"),
+        ]
 
 
 class MockTestQuestionEvent(models.Model):
