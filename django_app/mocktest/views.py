@@ -148,6 +148,35 @@ def mock_toggle_flag(request, session_id, index):
 
 @require_POST
 @login_required
+def mock_track_event(request, session_id, index):
+    """AJAX: record dwell time and revisit for the question just left."""
+    session = get_object_or_404(MockTestSession, id=session_id, user=request.user)
+    if session.submitted_at:
+        return JsonResponse({"ok": False})
+
+    ids = session.question_ids
+    if index < 0 or index >= len(ids):
+        return JsonResponse({"ok": False})
+
+    question = get_object_or_404(Question, id=ids[index])
+    dwell_ms = int(request.POST.get("dwell_ms", 0) or 0)
+    is_revisit = request.POST.get("is_revisit", "false") == "true"
+
+    obj, created = MockTestQuestionEvent.objects.get_or_create(
+        mock_session=session,
+        question=question,
+        defaults={"question_order": index},
+    )
+    obj.dwell_time_ms = F("dwell_time_ms") + max(dwell_ms, 0)
+    if is_revisit and not created:
+        obj.revisit_count = F("revisit_count") + 1
+    obj.save()
+
+    return JsonResponse({"ok": True})
+
+
+@require_POST
+@login_required
 def mock_submit(request, session_id):
     session = get_object_or_404(MockTestSession, id=session_id, user=request.user)
     if session.submitted_at:
@@ -211,11 +240,37 @@ def mock_result(request, session_id):
 
     incorrect_answers = max(session.total_questions - session.correct_answers, 0)
 
+    # Behavior / pace metrics
+    events = list(
+        MockTestQuestionEvent.objects.filter(mock_session=session).order_by("question_order")
+    )
+    skipped = MockTestResponse.objects.filter(mock_session=session, selected_option__isnull=True).count()
+    answer_changes = sum(e.answer_changed_count for e in events)
+    revisits = sum(e.revisit_count for e in events)
+    total_dwell = sum(e.dwell_time_ms for e in events)
+
+    avg_per_q = (session.duration_seconds / session.total_questions) if session.duration_seconds and session.total_questions else 0
+    if avg_per_q < 60:
+        pace_label, pace_class = "Fast", "text-warning"
+    elif avg_per_q <= 90:
+        pace_label, pace_class = "Normal", "text-success"
+    else:
+        pace_label, pace_class = "Slow", "text-danger"
+
+    pct_time_used = round((session.duration_seconds / DURATION_SECONDS) * 100) if session.duration_seconds else 0
+
     return render(request, "mocktest/result.html", {
         "session": session,
         "review": review,
         "topic_stats": topic_stats,
         "pass_mark": PASS_MARK,
         "incorrect_answers": incorrect_answers,
+        "skipped": skipped,
+        "answer_changes": answer_changes,
+        "revisits": revisits,
+        "avg_per_q": round(avg_per_q, 1),
+        "pace_label": pace_label,
+        "pace_class": pace_class,
+        "pct_time_used": pct_time_used,
     })
 

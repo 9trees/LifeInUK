@@ -112,6 +112,50 @@
   </div>
 </div>
 
+{% if pace_metrics %}
+<div class="card shadow-sm mt-3">
+  <div class="card-header fw-semibold d-flex justify-content-between">
+    <span>Mock Test Pace Metrics</span>
+    <span class="badge {{ pace_metrics.pace_class }} bg-opacity-10 border {{ pace_metrics.pace_class }}">{{ pace_metrics.pace_label }}</span>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-3 col-6">
+        <div class="text-center p-2 border rounded">
+          <p class="small text-muted mb-1">Avg per Question</p>
+          <p class="fs-5 fw-bold mb-0">{{ pace_metrics.avg_per_question }}s</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="text-center p-2 border rounded">
+          <p class="small text-muted mb-1">Last Test Time Used</p>
+          <p class="fs-5 fw-bold mb-0">{{ pace_metrics.latest_pct_used }}%</p>
+        </div>
+      </div>
+      <div class="col-md-2 col-6">
+        <div class="text-center p-2 border rounded">
+          <p class="small text-muted mb-1">Skipped</p>
+          <p class="fs-5 fw-bold mb-0">{{ pace_metrics.skipped }}</p>
+        </div>
+      </div>
+      <div class="col-md-2 col-6">
+        <div class="text-center p-2 border rounded">
+          <p class="small text-muted mb-1">Answer Changes</p>
+          <p class="fs-5 fw-bold mb-0">{{ pace_metrics.answer_changes }}</p>
+        </div>
+      </div>
+      <div class="col-md-2 col-6">
+        <div class="text-center p-2 border rounded">
+          <p class="small text-muted mb-1">Revisits</p>
+          <p class="fs-5 fw-bold mb-0">{{ pace_metrics.revisits }}</p>
+        </div>
+      </div>
+    </div>
+    <p class="mt-2 mb-0 small text-muted">💡 {{ pace_metrics.pace_tip }}</p>
+  </div>
+</div>
+{% endif %}
+
 {% if weak_topics %}
 <div class="card border-warning shadow-sm mt-3">
   <div class="card-body">
@@ -128,6 +172,10 @@
   <strong>Weakest topic:</strong> {{ weakest.name }} ({{ weakest.percent }}%). Consider more practice here.
 </div>
 {% endif %}
+
+<div class="text-center mt-4 mb-2">
+  <a href="{% url 'analytics:feedback' %}" class="btn btn-outline-secondary btn-sm">💬 Send Feedback</a>
+</div>
 
 {{ topic_rows|json_script:"topic-data" }}
 {{ mock_trend|json_script:"trend-data" }}

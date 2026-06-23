@@ -41,6 +41,47 @@
   </div>
 </div>
 
+{# Behavior & Pace Metrics #}
+<div class="card shadow-sm mb-4">
+  <div class="card-header fw-semibold">Behavior &amp; Pace Metrics</div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-3 col-6">
+        <div class="text-center p-3 border rounded h-100">
+          <p class="small text-muted mb-1">Pace</p>
+          <p class="fs-4 fw-bold mb-0 {{ pace_class }}">{{ pace_label }}</p>
+          <small class="text-muted">{{ avg_per_q }}s per question</small>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="text-center p-3 border rounded h-100">
+          <p class="small text-muted mb-1">Time Used</p>
+          <p class="fs-4 fw-bold mb-0">{{ pct_time_used }}%</p>
+          <small class="text-muted">of 45 min</small>
+        </div>
+      </div>
+      <div class="col-md-2 col-6">
+        <div class="text-center p-3 border rounded h-100">
+          <p class="small text-muted mb-1">Skipped</p>
+          <p class="fs-4 fw-bold mb-0">{{ skipped }}</p>
+        </div>
+      </div>
+      <div class="col-md-2 col-6">
+        <div class="text-center p-3 border rounded h-100">
+          <p class="small text-muted mb-1">Answer Changes</p>
+          <p class="fs-4 fw-bold mb-0">{{ answer_changes }}</p>
+        </div>
+      </div>
+      <div class="col-md-2 col-6">
+        <div class="text-center p-3 border rounded h-100">
+          <p class="small text-muted mb-1">Revisits</p>
+          <p class="fs-4 fw-bold mb-0">{{ revisits }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="card shadow-sm mb-4">
   <div class="card-header fw-semibold">Performance by Topic</div>
   <div class="card-body p-0">

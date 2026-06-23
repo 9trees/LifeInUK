@@ -91,12 +91,14 @@
 <script>
   const SESSION_ID = {{ session.id }};
   const INDEX = {{ index }};
+  const CSRF = '{{ csrf_token }}';
   let remaining = {{ duration }} - Math.round((Date.now() - {{ session.started_at|date:"U" }} * 1000) / 1000);
   if (remaining < 0) remaining = 0;
 
   const timerEl = document.getElementById('timer');
   const submitForm = document.getElementById('submit-form');
 
+  /* ── Timer ── */
   const tick = setInterval(() => {
     remaining = Math.max(0, remaining - 1);
     const m = String(Math.floor(remaining / 60)).padStart(2, '0');
@@ -107,21 +109,47 @@
   }, 1000);
 
   function autoSubmit() {
+    sendDwell();
     document.getElementById('elapsed_seconds').value = {{ duration }};
     submitForm.submit();
   }
 
   submitForm.addEventListener('submit', () => {
+    sendDwell();
     document.getElementById('elapsed_seconds').value = {{ duration }} - remaining;
   });
 
+  /* ── Dwell time tracking ── */
+  const pageArrival = Date.now();
+  // A question is a revisit if the user already had an answer recorded
+  const isRevisit = {{ response.selected_option_id|default:"null" }} !== null;
+
+  function sendDwell() {
+    const dwellMs = Date.now() - pageArrival;
+    const fd = new FormData();
+    fd.append('csrfmiddlewaretoken', CSRF);
+    fd.append('dwell_ms', dwellMs);
+    fd.append('is_revisit', isRevisit);
+    // Use sendBeacon for reliability on page unload, fall back to fetch
+    const url = `/mock/${SESSION_ID}/q/${INDEX}/track/`;
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(url, fd);
+    } else {
+      fetch(url, { method: 'POST', body: fd, keepalive: true });
+    }
+  }
+
+  // Fire dwell tracking when navigating away (prev/next links or browser navigation)
+  window.addEventListener('pagehide', sendDwell, { once: true });
+
+  /* ── Save answer ── */
   function saveAnswer(optionId) {
     document.querySelectorAll('.option-label').forEach((el) => el.classList.remove('selected-option'));
     const selectedLabel = document.getElementById(`opt-${optionId}`);
     if (selectedLabel) selectedLabel.classList.add('selected-option');
 
     const fd = new FormData();
-    fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    fd.append('csrfmiddlewaretoken', CSRF);
     fd.append('option', optionId);
     fetch(`/mock/${SESSION_ID}/q/${INDEX}/save/`, { method: 'POST', body: fd })
       .then(r => r.json())
@@ -130,9 +158,10 @@
       });
   }
 
+  /* ── Flag toggle ── */
   function toggleFlag() {
     const fd = new FormData();
-    fd.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    fd.append('csrfmiddlewaretoken', CSRF);
     fetch(`/mock/${SESSION_ID}/q/${INDEX}/flag/`, { method: 'POST', body: fd })
       .then(r => r.json())
       .then(data => {
