@@ -21,11 +21,11 @@
 
           <div class="mb-3">
             <label class="form-label fw-semibold">Rating</label>
-            <div class="d-flex gap-3 star-rating">
+            <div class="d-flex gap-1 star-rating" id="star-rating">
               {% for radio in form.rating %}
-              <label class="star-label" title="{{ radio.choice_label }}">
+              <label class="star-label" data-value="{{ radio.choice_value }}" title="{{ radio.choice_label }}">
                 {{ radio.tag }}
-                <span class="star-icon fs-4">★</span>
+                <span class="star-icon">★</span>
               </label>
               {% endfor %}
             </div>
@@ -53,8 +53,54 @@
 {% block scripts %}
 <style>
   .star-rating input[type="radio"] { display: none; }
-  .star-icon { color: #ccc; cursor: pointer; transition: color .15s; }
-  .star-rating input[type="radio"]:checked ~ .star-icon,
-  .star-label:hover .star-icon { color: #ffc107; }
+  .star-icon {
+    font-size: 2rem;
+    color: #ccc;
+    cursor: pointer;
+    transition: color .15s, transform .1s;
+    line-height: 1;
+  }
+  .star-icon:hover { transform: scale(1.15); }
+  .star-icon.active { color: #ffc107; }
+  .star-icon.hover { color: #ffdb70; }
 </style>
+<script>
+(function() {
+  const container = document.getElementById('star-rating');
+  const labels = container.querySelectorAll('.star-label');
+  const stars = container.querySelectorAll('.star-icon');
+
+  function highlightStars(upTo, cls) {
+    stars.forEach((s, i) => {
+      const val = parseInt(s.parentElement.dataset.value);
+      if (val <= upTo) s.classList.add(cls);
+      else s.classList.remove(cls);
+    });
+  }
+
+  function setRating() {
+    const checked = container.querySelector('input[type="radio"]:checked');
+    const val = checked ? parseInt(checked.value) : 0;
+    stars.forEach(s => s.classList.remove('active'));
+    highlightStars(val, 'active');
+  }
+
+  // Initial state (e.g. form re-render with existing value)
+  setRating();
+
+  labels.forEach(label => {
+    label.addEventListener('click', () => {
+      // The radio gets checked by the label click; update stars
+      setTimeout(setRating, 0);
+    });
+    label.addEventListener('mouseenter', () => {
+      const val = parseInt(label.dataset.value);
+      highlightStars(val, 'hover');
+    });
+    label.addEventListener('mouseleave', () => {
+      stars.forEach(s => s.classList.remove('hover'));
+    });
+  });
+})();
+</script>
 {% endblock %}

@@ -140,7 +140,7 @@
             {% endif %}
           </div>
           <p class="mb-1">{{ fb.message }}</p>
-          <small class="text-muted">— {{ fb.user.full_name|default:fb.user.email }}</small>
+          <small class="text-muted">— {{ fb.display_name }}</small>
         </div>
         <button class="btn btn-sm ms-3 flex-shrink-0
           {% if fb.is_read %}btn-outline-secondary{% else %}btn-outline-primary{% endif %}"
