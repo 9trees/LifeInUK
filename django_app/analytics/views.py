@@ -172,11 +172,11 @@ def feedback_view(request):
 @login_required
 def infographics_view(request):
     infographics = [
-        {"title": "Democracy Timeline", "file": "infographics/Democracy Timeline.pdf"},
-        {"title": "Inventions", "file": "infographics/Inventions.pdf"},
-        {"title": "Society and Values", "file": "infographics/Society and Values.pdf"},
-        {"title": "The British Constitution", "file": "infographics/The British Constitution.pdf"},
-        {"title": "UK Sport", "file": "infographics/UK Sport.pdf"},
-        {"title": "Writers", "file": "infographics/Writers.pdf"},
+        {"title": "Democracy Timeline", "file": "infographics/democracy-timeline.pdf"},
+        {"title": "Inventions", "file": "infographics/inventions.pdf"},
+        {"title": "Society and Values", "file": "infographics/society-and-values.pdf"},
+        {"title": "The British Constitution", "file": "infographics/the-british-constitution.pdf"},
+        {"title": "UK Sport", "file": "infographics/uk-sport.pdf"},
+        {"title": "Writers", "file": "infographics/writers.pdf"},
     ]
     return render(request, "analytics/infographics.html", {"infographics": infographics})

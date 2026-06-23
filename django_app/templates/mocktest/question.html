@@ -55,7 +55,7 @@
       {% if has_next %}
         <a class="btn btn-primary" href="{% url 'mocktest:question' session.id index|add:1 %}">Next &rarr;</a>
       {% else %}
-        <button class="btn btn-success" onclick="document.getElementById('submit-form').submit()">Finish &amp; Submit</button>
+        <button class="btn btn-success" onclick="document.getElementById('submit-form').requestSubmit()">Finish &amp; Submit</button>
       {% endif %}
     </div>
   </div>
@@ -108,15 +108,20 @@
     if (remaining === 0) { clearInterval(tick); autoSubmit(); }
   }, 1000);
 
+  function setElapsed() {
+    document.getElementById('elapsed_seconds').value = {{ duration }} - remaining;
+  }
+
   function autoSubmit() {
     sendDwell();
-    document.getElementById('elapsed_seconds').value = {{ duration }};
+    remaining = 0;
+    setElapsed();
     submitForm.submit();
   }
 
-  submitForm.addEventListener('submit', () => {
+  submitForm.addEventListener('submit', (e) => {
     sendDwell();
-    document.getElementById('elapsed_seconds').value = {{ duration }} - remaining;
+    setElapsed();
   });
 
   /* ── Dwell time tracking ── */
