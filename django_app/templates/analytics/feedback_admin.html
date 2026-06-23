@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{% block title %}Feedback Dashboard{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="fw-bold mb-1">Feedback Dashboard</h2>
+    <p class="text-muted mb-0">Monitor user feedback and app satisfaction at a glance.</p>
+  </div>
+  <button class="btn btn-outline-primary btn-sm" id="mark-all-read" onclick="markAllRead()">
+    ✓ Mark All as Read
+  </button>
+</div>
+
+{# ── Summary Cards ── #}
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center">
+        <p class="text-muted small mb-1">Total Feedback</p>
+        <p class="display-6 fw-bold mb-0 text-primary">{{ total }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center">
+        <p class="text-muted small mb-1">Unread</p>
+        <p class="display-6 fw-bold mb-0 text-danger" id="unread-count">{{ unread }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center">
+        <p class="text-muted small mb-1">Avg Rating</p>
+        <p class="display-6 fw-bold mb-0 text-warning">{{ avg_rating }} ★</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center">
+        <p class="text-muted small mb-1">Showing</p>
+        <p class="display-6 fw-bold mb-0 text-secondary">{{ feedbacks|length }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Charts Row ── #}
+<div class="row g-3 mb-4">
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold small">By Category</div>
+      <div class="card-body d-flex align-items-center justify-content-center" style="min-height:250px;">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold small">Rating Distribution</div>
+      <div class="card-body d-flex align-items-center justify-content-center" style="min-height:250px;">
+        <canvas id="ratingChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold small">Feedback Over 30 Days</div>
+      <div class="card-body" style="min-height:250px;">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Filters ── #}
+<div class="card shadow-sm mb-4">
+  <div class="card-body py-2">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-auto">
+        <label class="form-label small mb-0">Category</label>
+        <select name="category" class="form-select form-select-sm">
+          <option value="">All</option>
+          {% for code, label in categories %}
+          <option value="{{ code }}" {% if filter_category == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label small mb-0">Rating</label>
+        <select name="rating" class="form-select form-select-sm">
+          <option value="">All</option>
+          {% for i in "12345" %}
+          <option value="{{ i }}" {% if filter_rating == i %}selected{% endif %}>{{ i }} ★</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto">
+        <label class="form-label small mb-0">Status</label>
+        <select name="status" class="form-select form-select-sm">
+          <option value="">All</option>
+          <option value="unread" {% if filter_status == "unread" %}selected{% endif %}>Unread</option>
+          <option value="read" {% if filter_status == "read" %}selected{% endif %}>Read</option>
+        </select>
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary btn-sm">Filter</button>
+        <a href="{% url 'analytics:feedback_admin' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# ── Feedback List ── #}
+<div class="card shadow-sm">
+  <div class="card-header fw-semibold">All Feedback ({{ feedbacks|length }})</div>
+  {% if feedbacks %}
+  <div class="list-group list-group-flush">
+    {% for fb in feedbacks %}
+    <div class="list-group-item {% if not fb.is_read %}bg-light border-start border-4 border-primary{% endif %}" id="fb-{{ fb.id }}">
+      <div class="d-flex justify-content-between align-items-start">
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge
+              {% if fb.category == 'bug' %}bg-danger
+              {% elif fb.category == 'feature' %}bg-info text-dark
+              {% elif fb.category == 'content' %}bg-warning text-dark
+              {% else %}bg-secondary{% endif %}">
+              {{ fb.get_category_display }}
+            </span>
+            <span class="text-warning small">
+              {% for i in "12345" %}{% if forloop.counter <= fb.rating %}★{% else %}☆{% endif %}{% endfor %}
+            </span>
+            <span class="text-muted small">{{ fb.created_at|date:"d M Y, H:i" }}</span>
+            {% if not fb.is_read %}
+            <span class="badge bg-primary badge-unread" id="badge-{{ fb.id }}">NEW</span>
+            {% endif %}
+          </div>
+          <p class="mb-1">{{ fb.message }}</p>
+          <small class="text-muted">— {{ fb.user.full_name|default:fb.user.email }}</small>
+        </div>
+        <button class="btn btn-sm ms-3 flex-shrink-0
+          {% if fb.is_read %}btn-outline-secondary{% else %}btn-outline-primary{% endif %}"
+          onclick="toggleRead({{ fb.id }})" id="btn-{{ fb.id }}">
+          {% if fb.is_read %}↩ Unread{% else %}✓ Read{% endif %}
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card-body text-center text-muted py-5">
+    <p class="mb-0">No feedback found matching your filters.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+/* ── Category Doughnut ── */
+new Chart(document.getElementById('categoryChart'), {
+  type: 'doughnut',
+  data: {
+    labels: {{ category_labels|safe }},
+    datasets: [{
+      data: {{ category_data|safe }},
+      backgroundColor: ['#dc3545', '#0dcaf0', '#ffc107', '#6c757d'],
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+    }
+  }
+});
+
+/* ── Rating Bar ── */
+new Chart(document.getElementById('ratingChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ rating_labels|safe }},
+    datasets: [{
+      label: 'Count',
+      data: {{ rating_data|safe }},
+      backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#198754'],
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } }
+    }
+  }
+});
+
+/* ── Timeline Line ── */
+const tlLabels = {{ timeline_labels|safe }};
+const tlData = {{ timeline_data|safe }};
+const avgData = {{ avg_rating_data|safe }};
+
+new Chart(document.getElementById('timelineChart'), {
+  type: 'line',
+  data: {
+    labels: tlLabels,
+    datasets: [
+      {
+        label: 'Feedback count',
+        data: tlData,
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13,110,253,0.1)',
+        fill: true,
+        tension: 0.3,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Avg rating',
+        data: avgData,
+        borderColor: '#ffc107',
+        borderDash: [5, 3],
+        pointRadius: 0,
+        tension: 0.3,
+        yAxisID: 'y1',
+        spanGaps: true,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+    },
+    scales: {
+      x: { ticks: { maxTicksAutoSkip: true, maxRotation: 45, font: { size: 10 } } },
+      y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Count' } },
+      y1: { position: 'right', min: 1, max: 5, grid: { drawOnChartArea: false }, title: { display: true, text: 'Rating' } },
+    }
+  }
+});
+
+/* ── Toggle Read ── */
+function toggleRead(id) {
+  const fd = new FormData();
+  fd.append('csrfmiddlewaretoken', CSRF);
+  fetch(`/dashboard/feedback-admin/${id}/read/`, { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) return;
+      const row = document.getElementById(`fb-${id}`);
+      const btn = document.getElementById(`btn-${id}`);
+      const badge = document.getElementById(`badge-${id}`);
+      if (data.is_read) {
+        row.classList.remove('bg-light', 'border-start', 'border-4', 'border-primary');
+        btn.textContent = '↩ Unread';
+        btn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+        if (badge) badge.remove();
+      } else {
+        row.classList.add('bg-light', 'border-start', 'border-4', 'border-primary');
+        btn.textContent = '✓ Read';
+        btn.classList.replace('btn-outline-secondary', 'btn-outline-primary');
+      }
+      document.getElementById('unread-count').textContent = data.unread;
+      // Update navbar badge
+      const navBadge = document.getElementById('nav-feedback-badge');
+      if (navBadge) navBadge.textContent = data.unread > 0 ? data.unread : '';
+      if (navBadge) navBadge.style.display = data.unread > 0 ? '' : 'none';
+    });
+}
+
+/* ── Mark All Read ── */
+function markAllRead() {
+  const fd = new FormData();
+  fd.append('csrfmiddlewaretoken', CSRF);
+  fetch('/dashboard/feedback-admin/mark-all-read/', { method: 'POST', body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) return;
+      document.querySelectorAll('.badge-unread').forEach(b => b.remove());
+      document.querySelectorAll('.list-group-item.bg-light').forEach(row => {
+        row.classList.remove('bg-light', 'border-start', 'border-4', 'border-primary');
+      });
+      document.querySelectorAll('[id^="btn-"]').forEach(btn => {
+        btn.textContent = '↩ Unread';
+        btn.classList.replace('btn-outline-primary', 'btn-outline-secondary');
+      });
+      document.getElementById('unread-count').textContent = '0';
+      const navBadge = document.getElementById('nav-feedback-badge');
+      if (navBadge) { navBadge.textContent = ''; navBadge.style.display = 'none'; }
+    });
+}
+</script>
+{% endblock %}

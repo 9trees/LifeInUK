@@ -26,6 +26,20 @@
           <li class="nav-item"><a class="nav-link" href="{% url 'analytics:infographics' %}">Infographics</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'analytics:feedback' %}">Feedback</a></li>
           <li class="nav-item"><a class="nav-link" href="{% url 'accounts:profile' %}">Profile</a></li>
+          {% if user.is_superuser %}
+          <li class="nav-item">
+            <a class="nav-link position-relative" href="{% url 'analytics:feedback_admin' %}">
+              📊 Feedback Admin
+              {% if feedback_unread_count %}
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="nav-feedback-badge" style="font-size:.65rem;">
+                {{ feedback_unread_count }}
+              </span>
+              {% else %}
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="nav-feedback-badge" style="font-size:.65rem; display:none;"></span>
+              {% endif %}
+            </a>
+          </li>
+          {% endif %}
         </ul>
         <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
           {% csrf_token %}

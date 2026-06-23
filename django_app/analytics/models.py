@@ -17,6 +17,7 @@ class Feedback(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="general")
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES, default=5)
     message = models.TextField()
+    is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

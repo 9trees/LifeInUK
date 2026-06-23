@@ -1,6 +1,15 @@
+import json
+from collections import Counter
+from datetime import timedelta
+
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Avg, Count, Q
+from django.db.models.functions import TruncDate
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from content.models import StudyPage
 from mocktest.models import MockTestQuestionEvent, MockTestResponse, MockTestSession
@@ -8,6 +17,7 @@ from practice.models import PracticeResponse
 from study.models import UserStudyProgress
 
 from .forms import FeedbackForm
+from .models import Feedback
 
 
 @login_required
@@ -180,3 +190,117 @@ def infographics_view(request):
         {"title": "Writers", "file": "infographics/writers.pdf"},
     ]
     return render(request, "analytics/infographics.html", {"infographics": infographics})
+
+
+# ── Superuser Feedback Dashboard ──────────────────────────────
+
+
+def _superuser_required(user):
+    return user.is_authenticated and user.is_superuser
+
+
+@login_required
+@user_passes_test(_superuser_required)
+def feedback_admin(request):
+    """Superuser dashboard: view all feedback with charts and filters."""
+    qs = Feedback.objects.select_related("user").order_by("-created_at")
+
+    # Optional query-string filters
+    category = request.GET.get("category", "")
+    rating = request.GET.get("rating", "")
+    status = request.GET.get("status", "")  # "unread" or "read"
+
+    if category:
+        qs = qs.filter(category=category)
+    if rating:
+        qs = qs.filter(rating=int(rating))
+    if status == "unread":
+        qs = qs.filter(is_read=False)
+    elif status == "read":
+        qs = qs.filter(is_read=True)
+
+    all_feedback = list(qs)
+    all_unfiltered = Feedback.objects.all()
+
+    # ── Summary stats ──
+    total = all_unfiltered.count()
+    unread = all_unfiltered.filter(is_read=False).count()
+    avg_rating = all_unfiltered.aggregate(avg=Avg("rating"))["avg"] or 0
+
+    # ── Category breakdown (for doughnut chart) ──
+    cat_counts = dict(all_unfiltered.values_list("category").annotate(c=Count("id")).order_by("category"))
+    category_labels = [label for _, label in Feedback.CATEGORY_CHOICES]
+    category_data = [cat_counts.get(code, 0) for code, _ in Feedback.CATEGORY_CHOICES]
+
+    # ── Rating distribution (for bar chart) ──
+    rating_counts = dict(all_unfiltered.values_list("rating").annotate(c=Count("id")))
+    rating_labels = ["1 ★", "2 ★", "3 ★", "4 ★", "5 ★"]
+    rating_data = [rating_counts.get(i, 0) for i in range(1, 6)]
+
+    # ── Feedback over time — last 30 days (for line chart) ──
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    daily_qs = (
+        all_unfiltered.filter(created_at__gte=thirty_days_ago)
+        .annotate(day=TruncDate("created_at"))
+        .values("day")
+        .annotate(count=Count("id"))
+        .order_by("day")
+    )
+    daily_map = {row["day"]: row["count"] for row in daily_qs}
+    timeline_labels = []
+    timeline_data = []
+    for i in range(30):
+        day = (timezone.now() - timedelta(days=29 - i)).date()
+        timeline_labels.append(day.strftime("%d %b"))
+        timeline_data.append(daily_map.get(day, 0))
+
+    # ── Average rating over time (for line chart overlay) ──
+    daily_avg_qs = (
+        all_unfiltered.filter(created_at__gte=thirty_days_ago)
+        .annotate(day=TruncDate("created_at"))
+        .values("day")
+        .annotate(avg_r=Avg("rating"))
+        .order_by("day")
+    )
+    daily_avg_map = {row["day"]: round(float(row["avg_r"]), 1) for row in daily_avg_qs}
+    avg_rating_data = [daily_avg_map.get((timezone.now() - timedelta(days=29 - i)).date(), None) for i in range(30)]
+
+    context = {
+        "feedbacks": all_feedback,
+        "total": total,
+        "unread": unread,
+        "avg_rating": round(avg_rating, 1),
+        "category_labels": json.dumps(category_labels),
+        "category_data": json.dumps(category_data),
+        "rating_labels": json.dumps(rating_labels),
+        "rating_data": json.dumps(rating_data),
+        "timeline_labels": json.dumps(timeline_labels),
+        "timeline_data": json.dumps(timeline_data),
+        "avg_rating_data": json.dumps(avg_rating_data),
+        "filter_category": category,
+        "filter_rating": rating,
+        "filter_status": status,
+        "categories": Feedback.CATEGORY_CHOICES,
+    }
+    return render(request, "analytics/feedback_admin.html", context)
+
+
+@require_POST
+@login_required
+@user_passes_test(_superuser_required)
+def feedback_mark_read(request, pk):
+    """AJAX: toggle read status of a single feedback."""
+    fb = get_object_or_404(Feedback, pk=pk)
+    fb.is_read = not fb.is_read
+    fb.save(update_fields=["is_read"])
+    unread = Feedback.objects.filter(is_read=False).count()
+    return JsonResponse({"ok": True, "is_read": fb.is_read, "unread": unread})
+
+
+@require_POST
+@login_required
+@user_passes_test(_superuser_required)
+def feedback_mark_all_read(request):
+    """AJAX: mark all feedback as read."""
+    Feedback.objects.filter(is_read=False).update(is_read=True)
+    return JsonResponse({"ok": True, "unread": 0})
